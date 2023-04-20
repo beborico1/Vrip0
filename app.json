@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "vrip0",
+    "slug": "vrip0",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.vrip.vripapp",
+      "supportsTablet": true,
+      "buildNumber": "1.0.0"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5975b7f0-105b-4d07-b532-7bdfe8d59dbe"
+      }
+    },
+    "permissions": {
+      "mediaLibrary": {
+        "description": "Permite el acceso a la biblioteca de medios"
+      },
+      "camera": {
+        "description": "Permite el acceso a la cámara"
+      }
+    }
+  }
+}
