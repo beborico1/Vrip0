@@ -1,69 +1,52 @@
-import { Image, StyleSheet, TouchableOpacity, Text, View } from 'react-native';
+// Importación de componentes y bibliotecas necesarias
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { LogBox } from 'react-native';
-import CreatePostView from './views/CreatePostView';
-import HomeView from './views/HomeView';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
-LogBox.ignoreLogs(['Sending `onAnimatedValueUpdate` with no listeners registered']);
+// Importación de las pilas de navegación
+import HomeStack from './navigators/HomeStack.js';
+import MeStack from './navigators/MeStack';
 
-const Stack = createStackNavigator();
+import * as Localization from 'expo-localization';
+import translations from './helpers/translations.js';
+
+const Tab = createBottomTabNavigator();
 
 function AppNavigator() {
+  const locale = Localization.locale.slice(0, 2); // Obtiene el código de idioma de dos letras (por ejemplo, 'en' o 'es')
+  const texts = translations[locale] || translations.en; // Selecciona las traducciones correspondientes al idioma actual, y si no se encuentra, usa inglés por defecto
+
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Home"
-          component={HomeView}
-          options={({ navigation }) => ({
-            title: 'Inicio',
-            headerRight: () => (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('CreatePost')}
-                style={styles.addButton}>
-                <Text style={styles.addButtonText}>+</Text>
-              </TouchableOpacity>
-            ),
-          })}
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            if (route.name === 'HomeStack') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'MeStack') {
+              iconName = focused ? 'person' : 'person-outline';
+            }
+              return <Ionicons name={iconName} size={size} color={color} style={{marginBottom:0}} />; // You can return any component that you like here!
+            },
+            tabBarActiveTintColor: '#32CD32',
+            tabBarInactiveTintColor: 'gray',
+            tabBarLabelStyle: {marginBottom: 5}
+        })}
+      >
+        <Tab.Screen
+          name="HomeStack"
+          component={HomeStack}
+          options={{ headerShown: false, title: texts.homeTitle }}
         />
-        <Stack.Screen
-          name="CreatePost"
-          component={CreatePostView}
-          options={{
-            title: 'Subir un Outfit',
-            headerTintColor: '#32CD32',
-          }}
+        <Tab.Screen
+          name="MeStack"
+          component={MeStack}
+          options={{ headerShown: false, title: texts.meScreen }}
         />
-      </Stack.Navigator>
+      </Tab.Navigator>
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 100,
-    height: 100,
-  },
-  addButton: {
-    marginRight: 10,
-    backgroundColor: '#32CD32',
-    borderRadius: 50,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    color: '#FFF',
-    fontSize: 24,
-  },
-});
 
 export default AppNavigator;

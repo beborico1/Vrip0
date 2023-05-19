@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "vrip0",
+    "name": "vrip",
     "slug": "vrip0",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,18 @@
     "ios": {
       "bundleIdentifier": "com.vrip.vripapp",
       "supportsTablet": true,
-      "buildNumber": "1.0.0"
+      "buildNumber": "1.0.2",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires access to the camera to take photos for creating a post.",
+        "NSPhotoLibraryUsageDescription": "This app requires access to the photo library to select images for creating a post.",
+        "UIBackgroundModes": [
+          "fetch",
+          "processing"
+        ],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -40,6 +51,9 @@
       "camera": {
         "description": "Permite el acceso a la cámara"
       }
-    }
+    },
+    "plugins": [
+      "expo-localization"
+    ]
   }
 }
