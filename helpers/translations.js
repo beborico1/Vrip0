@@ -39,6 +39,20 @@ const translations = {
       or: "or",
       createAnAccount: "Create an Account",
       termsTitle: 'Terms and Conditions:',
+      deleteAccount: 'Delete Account',
+      errorGettingOutfits: 'Error getting outfits',
+      errorBlockingUser: 'Error blocking user',
+      post: '+ post',
+      settings: 'Settings',
+      saveChanges: 'Save Changes',
+      enterYourName: 'Enter your name',
+      enterPresentation: 'Enter a brief presentation',
+      deleteAccountConfirmation: "Are you sure you want to delete your account?",
+      cancel: "Cancel",
+      success: "Success",
+      accountDeletedInfo: "User deleted, the posts created by the user may take 15 to 20 minutes to disappear from the platform.",
+      likedOutfits: 'Liked Outfits',
+      noLikedOutfits: 'You have not liked any outfits yet',
       terms: `
 Last update: April 22, 2023.
 
@@ -129,6 +143,21 @@ If you have any questions about these Terms, please contact us at vripfashion@gm
       or: "o",
       createAnAccount: "Crear una Cuenta",
       termsTitle: 'Términos y Condiciones:',
+      deleteAccount: 'Eliminar Cuenta',
+      errorGettingOutfits: 'Error al obtener outfits',
+      errorBlockingUser: 'Error al bloquear usuario',
+      post: '+ publicar',
+      settings: 'Configuración',
+      saveChanges: 'Guardar Cambios',
+      enterYourName: 'Ingresa tu nombre',
+      enterYourUsername: 'Ingresa tu nombre de usuario',
+      enterPresentation: 'Ingresa una breve presentación',
+      deleteAccountConfirmation: "¿Estás seguro de que deseas eliminar tu cuenta?",
+      cancel: "Cancelar",
+      success: "Éxito",
+      accountDeletedInfo: "Usuario eliminado, los posts creados por el usuario pueden tardar de 15 a 20 minutos en desaparecer de la plataforma.",
+      likedOutfits: 'Atuendos Favoritos',
+      noLikedOutfits: 'Aún no has dado like a ningún atuendo',
       terms: `
 Última actualización: 22 de abril de 2023.
 

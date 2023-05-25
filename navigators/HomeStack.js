@@ -1,17 +1,18 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { Text, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import * as Localization from 'expo-localization';
 import { auth } from '../firebaseConfig';
 import { createStackNavigator } from '@react-navigation/stack';
-import HomeView from '../views/HomeView';
-import CreatePostView from '../views/CreatePostView';
+import HomeScreen from '../views/HomeScreen';
+import CreatePostScreen from '../views/CreatePostScreen';
 import translations from '../helpers/translations';
+import { textStyles } from '../helpers/styles';
+import colors from '../helpers/colors';
 
 const Stack = createStackNavigator();
 
 const HomeStack = () => {
     const [user, setUser] = useState(auth.currentUser);
-    console.log('user',user,auth.currentUser)
   
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(user => {
@@ -31,55 +32,30 @@ const HomeStack = () => {
       <Stack.Navigator>
           <Stack.Screen
             name="Home"
-            component={HomeView}
+            component={HomeScreen}
             options={({ navigation }) => ({
               title: texts.homeTitle,
               headerRight: () => (
                 user ? 
                 <TouchableOpacity
                   onPress={() => navigation.navigate('CreatePost')}
-                  style={styles.addButton}>
-                  <Text style={styles.addButtonText}>+</Text>
+                  >
+                  <Text style={[textStyles.greenLabel, { paddingHorizontal: 10 }]}>{texts.post}</Text>
                 </TouchableOpacity> : null
               ),
             })}
           />
           <Stack.Screen
             name="CreatePost"
-            component={CreatePostView}
+            component={CreatePostScreen}
             options={{
               title: texts.createPostTitle,
-              headerTintColor: '#32CD32',
+              headerTintColor: colors.vrip,
             }}
           />
       </Stack.Navigator>
     )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 100,
-    height: 100,
-  },
-  addButton: {
-    marginRight: 10,
-    backgroundColor: '#32CD32',
-    borderRadius: 50,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    color: '#FFF',
-    fontSize: 24,
-  },
-});
 
 export default HomeStack

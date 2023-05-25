@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useNavigation } from '@react-navigation/native';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import colors from '../../helpers/colors';
 import * as Localization from 'expo-localization';
 import { auth, db } from '../../firebaseConfig';
 import translations from '../../helpers/translations';
+import { buttonStyles, containerStyles, inputStyles, textStyles } from '../../helpers/styles';
 
 const SignUpScreen = () => {
   const [email, setEmail] = useState('');
@@ -37,6 +37,7 @@ const SignUpScreen = () => {
             presentation:"",
             profile_picture:"",
             username:"",
+            name:"",
         });
 
         navigation.navigate("MeScreen")
@@ -61,14 +62,14 @@ const SignUpScreen = () => {
   }, [email, password]);
   
   return (
-    <KeyboardAvoidingView behavior="padding" style={styles.container}>
+    <KeyboardAvoidingView behavior="padding" style={containerStyles.container}>
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-        <View style={styles.innerContainer}>
-          <Text style={styles.title}>{texts.welcome}</Text>
+        <View style={containerStyles.container}>
+          <Text style={textStyles.title}>{texts.welcome}</Text>
           <TextInput
             placeholder={texts.emailAddress}
             autoCapitalize="none"
-            style={styles.textInput}
+            style={inputStyles.input}
             onChangeText={email => setEmail(email)}
             value={email}
             placeholderTextColor={"#CCCCCC"}
@@ -77,7 +78,7 @@ const SignUpScreen = () => {
             secureTextEntry
             placeholder={texts.password}
             autoCapitalize="none"
-            style={styles.textInput}
+            style={inputStyles.input}
             onChangeText={password => setPassword(password)}
             value={password}
             placeholderTextColor={"#CCCCCC"}
@@ -85,11 +86,11 @@ const SignUpScreen = () => {
           {errorMessage && (
             <Text style={{ color: 'red', width: "80%", textAlign: "center" }}>{errorMessage}</Text>
           )}
-          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <TouchableOpacity style={[buttonStyles.greenButton,{ width:"80%" }]} onPress={handleSignUp}>
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>{texts.createAccount}</Text>
+              <Text style={buttonStyles.greenButtonText}>{texts.createAccount}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -97,56 +98,5 @@ const SignUpScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  innerContainer: {
-    flex: 1,
-    width: "100%",
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 24,
-  },
-  textInput: {
-    width: '80%',
-    height: 48,
-    marginBottom: 16,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderRadius: 8,
-    borderColor: '#ddd',
-    backgroundColor: 'white',
-  },
-  button: {
-    width: '80%',
-    height: 48,
-    justifyContent: 'center',
-    backgroundColor: colors.vrip,
-    padding: 10,
-    borderRadius: 5,
-    margin: 10,
-    alignItems: 'center',
-    shadowColor: "#333",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-});
 
 export default SignUpScreen;

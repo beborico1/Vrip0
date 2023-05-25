@@ -2,8 +2,8 @@ import { doc, getDoc } from '@firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useCallback, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
-import styles from '../../helpers/styles';
+import { View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+import { buttonStyles, containerStyles, inputStyles, textStyles } from '../../helpers/styles';
 import { auth, db } from '../../firebaseConfig';
 import * as Localization from 'expo-localization';
 import translations from '../../helpers/translations';
@@ -59,12 +59,12 @@ const LoginScreen = () => {
   }, [email, password]);
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={styles.container}>
+    <KeyboardAvoidingView behavior="padding" style={containerStyles.container}>
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-        <View style={styles.container}>
-          <Text style={styles.title}>{texts.welcomeBack}</Text>
+        <View style={containerStyles.container}>
+          <Text style={textStyles.title}>{texts.welcomeBack}</Text>
           <TextInput
-            style={styles.input}
+            style={inputStyles.input}
             placeholder={texts.email}
             value={email}
             onChangeText={setEmail}
@@ -74,7 +74,7 @@ const LoginScreen = () => {
             placeholderTextColor={"#CCCCCC"}
           />
           <TextInput
-            style={styles.input}
+            style={inputStyles.input}
             placeholder={texts.password}
             value={password}
             onChangeText={setPassword}
@@ -84,11 +84,11 @@ const LoginScreen = () => {
           {errorMessage && (
             <Text style={{ color: 'red', width: "80%", textAlign: "center" }}>{errorMessage}</Text>
           )}
-          <TouchableOpacity style={[styles.greenButton,{ width:"80%" }]} onPress={handleLogin}>
+          <TouchableOpacity style={[buttonStyles.greenButton,{ width:"80%" }]} onPress={handleLogin}>
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.greenButtonText}>{texts.signIn}</Text>
+              <Text style={buttonStyles.greenButtonText}>{texts.signIn}</Text>
             )}
           </TouchableOpacity>
         </View>
