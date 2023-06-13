@@ -1,33 +1,19 @@
 import { Text, TouchableOpacity } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import * as Localization from 'expo-localization';
-import { auth } from '../firebaseConfig';
+import React, { useContext } from 'react'
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from '../views/HomeScreen';
 import CreatePostScreen from '../views/CreatePostScreen';
-import translations from '../helpers/translations';
 import { textStyles } from '../helpers/styles';
 import colors from '../helpers/colors';
+import { UserContext } from '../helpers/UserContext';
+import { LanguageContext } from '../helpers/LanguageContext';
 
 const Stack = createStackNavigator();
 
 const HomeStack = () => {
-    const [user, setUser] = useState(auth.currentUser);
-  
-    useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(user => {
-            if (user) {
-                setUser(user);
-            } else {
-                setUser(null);
-            }
-        });
-        return unsubscribe;
-    }, []);
-  
-    const locale = Localization.locale.slice(0, 2); // Obtiene el código de idioma de dos letras (por ejemplo, 'en' o 'es')
-    const texts = translations[locale] || translations.en; // Selecciona las traducciones correspondientes al idioma actual, y si no se encuentra, usa inglés por defecto
-  
+    const { texts } = useContext(LanguageContext);
+    const { user, setUser } = useContext(UserContext);
+
     return (
       <Stack.Navigator>
           <Stack.Screen

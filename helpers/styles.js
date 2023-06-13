@@ -10,14 +10,6 @@ export const containerStyles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
   },
-  imagePlaceholder: {
-    width: 150,
-    height: 225,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-  },
   modalView: {
     flex: 1,
     alignItems: 'center',

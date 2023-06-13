@@ -1,143 +1,71 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { View } from 'react-native'
+import React, { useState } from 'react'
 import FeedHeader from '../components/FeedHeader'
-import * as Localization from 'expo-localization';
-import translations from '../helpers/translations';
+import Outfits from '../components/Outfits';
+import useAllOutfits from '../hooks/useAllOutfits';
+import { containerStyles } from '../helpers/styles';
+import { LanguageContext } from '../helpers/LanguageContext';
+import OutfitModal from './modals/OutfitModal';
 
 const HomeScreen = () => {
-  const windowWidth = useWindowDimensions().width;
+  const { texts } = React.useContext(LanguageContext);
 
-  const locale = Localization.locale.slice(0, 2); // Obtiene el código de idioma de dos letras (por ejemplo, 'en' o 'es')
-  const texts = translations[locale] || translations.en; // Selecciona las traducciones correspondientes al idioma actual, y si no se encuentra, usa inglés por defecto
+  const { loading, error, outfits, setOutfits } = useAllOutfits();
+
+  const [selectedOutfit, setSelectedOutfit] = useState(null);
+
+  const onOutfitPress = (outfit) => {
+    console.log('outfit press', outfit);
+    setSelectedOutfit(outfit);
+  };
+
+  const handleFilterReport = () => {
+    const filteredOutfits = outfits.filter(outfit => outfit.reported === true);
+    setOutfits(filteredOutfits);
+  };
 
   return (
-    <View>
+    <>
+    <OutfitModal
+      outfit = {selectedOutfit}
+      isVisible={selectedOutfit !== null}
+      closeOutfitModal={() => setSelectedOutfit(null)}
+      handleFilterReport = {handleFilterReport}
+    />
+
+    <View style={containerStyles.container}>
       <FeedHeader title = {texts.communityOutfits} />
       
-      <Outfits 
-        outfits={[]} 
-        onOutfitPress={() => console.log("outfit press")} 
-        windowWidth={windowWidth} 
-        blockedUsers={[]}
+      <Outfits
+        outfits = {outfits}
+        loading = {loading}
+        error = {error}
+        onOutfitPress = {onOutfitPress}
       />
+
     </View>
+    </>
   )
 }
 
 export default HomeScreen
 
-// import React, { useState, useCallback, useContext } from 'react';
-// import {
-//   View,
-//   useWindowDimensions,
-//   Text,
-//   ActivityIndicator,
-// } from 'react-native';
-// import { useFocusEffect } from '@react-navigation/native';
-// import * as Localization from 'expo-localization';
-// import translations from '../helpers/translations';
-// import FeedHeader from '../components/FeedHeader';
-// import Outfits from '../components/Outfits';
-// import OutfitModal from './modals/OutfitModal';
-// import WelcomeModal from './modals/WelcomeModal';
-// import { containerStyles, textStyles } from '../helpers/styles';
-// import colors from '../helpers/colors';
-// import { TouchableOpacity } from 'react-native-gesture-handler';
-// import * as SecureStore from 'expo-secure-store';
-// import useOutfits from '../hooks/useOutfits';
-// import { OutfitContext } from '../helpers/OutfitContext';
+// Optimización de la carga inicial de outfits: Puedes implementar una técnica de carga progresiva para cargar inicialmente solo un número limitado de outfits y luego cargar más outfits a medida que el usuario se desplaza hacia abajo en la lista.
 
-// const HomeScreen = () => {
-//   const windowWidth = useWindowDimensions().width;
-//   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-//   const [selectedOutfit, setSelectedOutfit] = useState(null);
-//   const [showOutfitModal, setShowOutfitModal] = useState(false);
+// Mejorar el manejo de errores: Agrega un componente de manejo de errores que muestre un mensaje amigable al usuario en caso de que ocurra un error al cargar los outfits.
 
-//   const { outfits, setOutfits, setErrorMessageLoadingOutfits, errorMessageLoadingOutfits, loadingOutfits, refreshOutfits } = useOutfits();
-//   const { setRefreshOutfits} = useContext(OutfitContext);
+// Implementar paginación infinita: En lugar de cargar todos los outfits a la vez, considera implementar la carga paginada o infinita, donde se cargan más outfits a medida que el usuario se desplaza hacia abajo en la lista.
 
-//   const locale = Localization.locale.slice(0, 2); // Obtiene el código de idioma de dos letras (por ejemplo, 'en' o 'es')
-//   const texts = translations[locale] || translations.en; // Selecciona las traducciones correspondientes al idioma actual, y si no se encuentra, usa inglés por defecto
+// Agregar un indicador de carga: Muestra un indicador de carga (por ejemplo, un spinner) mientras se cargan los outfits, para informar al usuario que la aplicación está trabajando en segundo plano.
 
-//   const onOutfitPress = (outfit) => {
-//     console.log('outfit press', outfit);
-//     setSelectedOutfit(outfit);
-//     setShowOutfitModal(true);
-//   };
+// Agregar un indicador de fin de lista: Muestra un indicador visual cuando se llega al final de la lista de outfits para indicar que no hay más outfits disponibles.
 
-//   const closeOutfitModal = () => {
-//     setSelectedOutfit(null);
-//     setShowOutfitModal(false);
-//   };
+// Agregar filtrado de outfits: Implementa la capacidad de filtrar los outfits por diferentes categorías o etiquetas para que los usuarios puedan explorar outfits específicos de su interés.
 
-//   const closeWelcomeModal = () => {
-//     setShowWelcomeModal(false);
-//   };
+// Mejorar la experiencia de usuario al seleccionar un outfit: Además de simplemente mostrar el outfit seleccionado en un modal, considera implementar una vista más detallada del outfit, que muestre información adicional y permita al usuario interactuar con él de diversas formas.
 
-//   // Función para recuperar el estado de 'firstLaunch' del almacenamiento
-//   const getFirstLaunch = async () => {
-//     try {
-//       const value = await SecureStore.getItemAsync('alreadyLaunched');
-//       if (value == null) {
-//         // Si es la primera vez que se lanza, almacenamos la información y mostramos el modal
-//         await SecureStore.setItemAsync('alreadyLaunched', 'true');
-//         setShowWelcomeModal(true);
-//       }
-//     } catch (error) {
-//       // Manejo de errores
-//       console.error(error);
-//     }
-//   };
+// Agregar funcionalidad de búsqueda: Implementa una barra de búsqueda que permita a los usuarios buscar outfits por palabras clave o etiquetas relacionadas.
 
-//   useFocusEffect(
-//     useCallback(() => {
-//       getFirstLaunch();
-//       setRefreshOutfits(refreshOutfits);
-//     }, [])
-//   );
+// Agregar acciones interactivas: Permite a los usuarios realizar acciones adicionales en los outfits, como dar "me gusta", compartir, guardar en una lista de favoritos, etc.
 
-//   return (
-//     <>
-//       <OutfitModal
-//           isVisible={showOutfitModal}
-//           selectedOutfit={selectedOutfit}
-//           closeOutfitModal={closeOutfitModal}
-//           setErrorMessage={setErrorMessageLoadingOutfits}
-//           setOutfits={setOutfits}
-//       /> 
-
-//       <WelcomeModal 
-//         isVisible={showWelcomeModal} 
-//         closeWelcomeModal={closeWelcomeModal} 
-//       />
-
-//       {errorMessageLoadingOutfits && (
-//         <TouchableOpacity style={containerStyles.errorContainer} onPress={() => setErrorMessageLoadingOutfits(null)}>
-//           <Text style={textStyles.errorText}>x {errorMessageLoadingOutfits}</Text>
-//         </TouchableOpacity>
-//       )}
-
-//       <View style={containerStyles.container}>
-//         <FeedHeader title = {texts.communityOutfits} />
-//         {loadingOutfits ? (
-//           <View style={containerStyles.container}>
-//             <ActivityIndicator size="large" color={ colors.vrip } style={containerStyles.loadingIndicator} />
-//           </View>
-//         ) : (
-//           !showWelcomeModal ? (
-//             <Outfits 
-//               outfits={outfits} 
-//               onOutfitPress={onOutfitPress} 
-//               windowWidth={windowWidth} 
-//               blockedUsers={[]}
-//             />
-//           ) : (
-//             <View style={containerStyles.container}></View>
-//           )
-//         )}
-//       </View>
-//     </>
-//     );
-//   };
-    
-// export default HomeScreen;
+// Mejorar la accesibilidad: Asegúrate de que la aplicación sea accesible para usuarios con discapacidades visuales o de movilidad. Esto puede incluir el uso de etiquetas de accesibilidad, tamaños de fuente ajustables, controles de voz y más.

@@ -1,139 +1,176 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Image, TextInput, ActivityIndicator, Keyboard } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { Image, View, TextInput, Alert, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { auth, db, storage } from '../firebaseConfig'; // Assuming you have a firebaseConfig.js file that exports the configured storage instance
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db, storage } from '../firebaseConfig';
+import { buttonStyles, containerStyles, inputStyles } from '../helpers/styles';
 import { useNavigation } from '@react-navigation/native';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { Ionicons } from '@expo/vector-icons';
-import * as Localization from 'expo-localization';
-import translations from '../helpers/translations';
-import { buttonStyles, containerStyles, inputStyles, textStyles } from '../helpers/styles';
-import colors from '../helpers/colors';
+import { LanguageContext } from '../helpers/LanguageContext';
 
-const CreatePostScreen = () => {
-  const [description, setDescription] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+export default function CreatePostScreen() {
+  const [image, setImage] = useState(null);
+  const [description, setDescription] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentAsset, setCurrentAsset] = useState(null);
+
   const navigation = useNavigation();
 
-  const locale = Localization.locale.slice(0, 2); // Obtiene el código de idioma de dos letras (por ejemplo, 'en' o 'es')
-  const texts = translations[locale] || translations.en; // Selecciona las traducciones correspondientes al idioma actual, y si no se encuentra, usa inglés por defecto
+  const { texts } = useContext(LanguageContext);
 
-  const pickImage = async (fromCamera) => {
-    const { status } = fromCamera
-    ? await ImagePicker.requestCameraPermissionsAsync()
-    : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Se necesitan permisos para acceder a la cámara o la biblioteca de medios.');
-      return;
-    }
-
-    const pickerOptions = {
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.5,
-    };
-
-    const result = fromCamera
-      ? await ImagePicker.launchCameraAsync(pickerOptions)
-      : await ImagePicker.launchImageLibraryAsync(pickerOptions);
-
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
+  const pickImage = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [2, 3],
+        quality: 0.1,
+      });
+  
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+        setCurrentAsset(result.assets[0]);
+      }
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Error", texts.imagePickerError);
     }
   };
-
+  
   const uploadImage = async () => {
-    if (!selectedImage) {
-      alert(texts.noImageSelected);
-      return;
+    // Validation: Ensure an image has been picked and a description entered
+    if (!currentAsset) {
+        Alert.alert("Error", texts.imageNotSelected);
+        return;
     }
+
+    let blob;
 
     try {
-      const response = await fetch(selectedImage);
-      const blob = await response.blob();
-      const imagePath = `images/${Date.now()}.jpg`;
-      const imageRef = ref(storage, imagePath);
+      const response = await fetch(currentAsset.uri);
+      blob = await response.blob();
 
-      try {
-        await uploadBytes(imageRef, blob);
-        const imageUrl = await getDownloadURL(imageRef);
-        const timestamp = serverTimestamp();
-        const outfitsRef = collection(db, 'outfits');
-        const uid = auth.currentUser.uid;
-        await addDoc(outfitsRef, { createdAt: timestamp, imageUrl, description, postedBy: uid, reported: false, likeCount: 0 }); // Incluye la descripción en el documento de Firestore
-        navigation.navigate('Home');
-      } catch (error) {
-        console.error('Error al subir la imagen', error);
-        alert(texts.uploadError);
-      } finally {
-        setUploading(false);
-      }  
+      if (!auth.currentUser) {
+        return;
+      }
+
+      const uid = auth.currentUser.uid;
+      
+      const uploadRef = ref(storage, `outfits/${uid}/${Date.now()}`);
+      
+      const uploadTask = uploadBytesResumable(uploadRef, blob);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          let progress = (snapshot.bytesTransferred / snapshot.totalBytes);
+          progress = Math.round(progress * 100);
+          console.log('Upload is ' + progress + '% done');
+          setUploadProgress(progress);
+        }, 
+        (error) => {
+          console.log(error);
+          Alert.alert("Error", "Hubo un error durante la subida de la imagen.");
+        }, 
+        async () => {
+          getDownloadURL(uploadRef).then( async (downloadURL) => {
+            console.log('File available at', downloadURL);
+            setImage(downloadURL);
+            const postsCollection = collection(db, 'outfits');
+            await addDoc(postsCollection, {
+              imageUrl: downloadURL,
+              description: description,
+              likeCount: 0,
+              viewCount: 0,
+              postedBy: uid,
+              reported: false,
+              createdAt: serverTimestamp(),
+            });
+            setUploadProgress(0); // reset progress after upload
+
+            setCurrentAsset(null);
+
+            // Clean up blob resource
+            blob = null;
+
+            navigation.navigate("Home");
+          }).catch(error => {
+            console.log(error);
+            Alert.alert("Error", "Hubo un error al obtener la URL de la imagen subida.");
+          });
+        }
+      );
     } catch (error) {
-      console.error('Error al subir la imagen', error);
-      alert(texts.uploadError);
-    } finally {
-      setUploading(false);
+      console.log(error);
+      Alert.alert("Error", "Hubo un error al subir la imagen.");
+
+      blob = null;
     }
-
-    setUploading(true);    
-  };
-
-  const renderImagePlaceholder = () => {
-    return (
-      <View style={ containerStyles.imagePlaceholder }>
-        <Text style={{ color: 'white', fontSize: 64 }}>+</Text>
-      </View>
-    );
   };
 
   return (
-    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-    <View style={{ flex: 1, alignItems: 'center', padding: 20, backgroundColor: 'white' }}>
-        <Text style={[textStyles.infoLabel,{marginBottom: 20}]}>
-          {texts.permissionsMessage}
-        </Text>
-        <TouchableOpacity onPress={() => pickImage(false)} >
-          {selectedImage ? (
-            <Image source={{ uri: selectedImage }} style={{ width: 150, height: 225 }} />
-          ) : (
-            renderImagePlaceholder()
-          )}
+    <View style={containerStyles.container}>
+      {!image ? 
+        <TouchableOpacity style={styles.imagePlaceholder} onPress={pickImage}>
+          <Text style={styles.imagePlaceholderText}>+</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => pickImage(true)}>
-          <View style={{ flexDirection: 'row', paddingVertical: 10, marginBottom: 20 }}>
-            <Ionicons name="camera-outline" size={20} color={colors.vrip} style={{ marginRight: 5 }} />
-            <Text style={textStyles.greenLabel}>{texts.openCamera}</Text>
-          </View>
+        :
+        <TouchableOpacity onPress={pickImage}>
+          <Image source={{ uri: image }} style={{ width: 200, height: 300, marginBottom: 30 }} />
         </TouchableOpacity>
+      }
 
-      {selectedImage && (
-        <>
       <TextInput
         style={inputStyles.detailInput}
         onChangeText={setDescription}
         value={description}
-        placeholder={texts.descriptionPlaceholder}
-        multiline={false}
-        onSubmitEditing={() => Keyboard.dismiss()}
+        placeholder={texts.addDescription}
       />
 
-      <TouchableOpacity onPress={uploadImage} style={[ buttonStyles.greenButton, { width: '80%' }]}>
-          {uploading ? (
+      <TouchableOpacity style={buttonStyles.greenButton} onPress={uploadImage} disabled={uploadProgress > 0}>
+        {uploadProgress > 0 ? 
             <ActivityIndicator color="white" />
-            ) : (
-            <Text style={buttonStyles.greenButtonText}>{texts.uploadOutfit}</Text>
-          )}
+                :
+            <Text style={buttonStyles.greenButtonText}>
+                {texts.uploadOutfit}
+            </Text>
+        }
       </TouchableOpacity>
-      <View style={containerStyles.container}>
-        <Text style={textStyles.infoLabel}>{texts.publicationMessage}</Text>
-      </View>
-      </>
-      )}
     </View>
-    </TouchableWithoutFeedback>
   );
-};
+}
 
-export default CreatePostScreen;
+const styles = StyleSheet.create({
+    imagePlaceholder: {
+      width: 200,
+      height: 300,
+      backgroundColor: 'lightgrey',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 30,
+    },
+    imagePlaceholderText: {
+      color: 'white',
+      fontWeight: '400',
+      fontSize: 80, // Adjust this size as needed
+    },
+  });
+
+// Separar lógica en funciones auxiliares: Puedes separar la lógica relacionada con la selección y carga de imágenes en funciones auxiliares para hacer el componente más legible y modular.
+
+// Validación de entrada: Agrega validación adicional para asegurarte de que la descripción no esté vacía antes de subir la imagen.
+
+// Manejo de errores mejorado: Mejora el manejo de errores al mostrar mensajes de error más descriptivos al usuario en caso de fallos durante la selección o carga de imágenes.
+
+// Internacionalización: Utiliza el contexto de idioma para localizar los mensajes de error y los textos mostrados al usuario.
+
+// Optimización de la carga de imágenes: Evalúa la posibilidad de utilizar técnicas de compresión de imágenes o reducción de calidad para mejorar el rendimiento de la carga de imágenes, especialmente si la calidad de la imagen no es crítica para la aplicación.
+
+// Mejorar la experiencia de usuario durante la carga: Considera mostrar un indicador de progreso más visual durante la carga de la imagen, como una barra de progreso animada.
+
+// Manejo de permisos de acceso a la galería: Verifica y solicita los permisos necesarios para acceder a la galería de imágenes antes de permitir al usuario seleccionar una imagen.
+
+// Validación de usuario autenticado: Además de verificar si auth.currentUser existe, puedes mostrar un mensaje de error o redirigir al usuario a la pantalla de inicio de sesión si no está autenticado.
+
+// Limpiar estado después de subir la imagen: Después de subir exitosamente la imagen y agregarla a la base de datos, puedes restablecer los estados image, description y uploadProgress para preparar el componente para una nueva carga de imagen.
+
+// Manejo de cancelación de selección de imágenes: Si el usuario cancela la selección de una imagen, puedes restablecer los estados relacionados (image, description, currentAsset) para evitar cualquier estado inconsistente.

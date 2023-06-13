@@ -100,3 +100,23 @@ const SignUpScreen = () => {
 };
 
 export default SignUpScreen;
+
+// Validación de campos: Agrega validación adicional a los campos de correo electrónico y contraseña para asegurarte de que cumplan con los requisitos necesarios, como longitud mínima o caracteres especiales.
+
+// Confirmación de contraseña: Agrega un campo adicional para confirmar la contraseña y realiza la validación correspondiente para garantizar que las contraseñas coincidan antes de crear la cuenta.
+
+// Mejora en la presentación de errores: Proporciona mensajes de error más descriptivos y amigables para informar al usuario sobre cualquier problema relacionado con el registro.
+
+// Mejora en la accesibilidad: Asegúrate de que todos los elementos visuales sean accesibles para usuarios con discapacidades visuales o de movilidad. Puedes hacer esto agregando etiquetas accessibilityLabel a los elementos visuales y asegurándote de que se pueda navegar correctamente utilizando un lector de pantalla.
+
+// Política de privacidad y términos: Considera agregar enlaces a la política de privacidad y términos y condiciones para que el usuario pueda revisarlos antes de registrarse.
+
+// Estilos y diseño: Asegúrate de aplicar estilos y diseño coherentes en todo el componente, siguiendo las pautas de diseño de la aplicación y utilizando una paleta de colores consistente. Esto mejorará la apariencia visual y la experiencia del usuario.
+
+// Contraseña segura: Proporciona indicaciones sobre los requisitos de seguridad de la contraseña, como una longitud mínima, uso de letras mayúsculas y minúsculas, números y caracteres especiales.
+
+// Verificación de correo electrónico: Considera agregar un paso de verificación de correo electrónico después del registro exitoso para mejorar la seguridad y garantizar que el usuario proporcione una dirección de correo electrónico válida.
+
+// Uso de bibliotecas externas: Evalúa si es necesario utilizar bibliotecas externas para gestionar la validación de formularios y la presentación de mensajes de error de manera más eficiente y efectiva.
+
+// Implementación de términos de uso obligatorios: Si es necesario, agrega una casilla de verificación que requiera que el usuario acepte los términos y condiciones antes de completar el registro. Esto garantizará que el usuario esté consciente y de acuerdo con las políticas de la aplicación.
