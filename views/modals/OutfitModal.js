@@ -1,4 +1,4 @@
-import { Animated, Dimensions, Image, Modal, TouchableOpacity, View, Text } from 'react-native'
+import { Animated, Dimensions, Image, Modal, TouchableOpacity, View, Text, Alert, SafeAreaView, ScrollView } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { buttonStyles, containerStyles } from '../../helpers/styles'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
@@ -51,9 +51,6 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
           const viewDoc = doc(db, 'outfits', outfit.id, 'views', auth.currentUser.uid);
           // Get the document
           const viewDocSnapshot = await getDoc(viewDoc);
-
-          // Get the user document
-          //const userDoc = doc(db, 'users', auth.currentUser.uid, 'views', outfit.id);
 
           // If the document doesn't exist
           if (!viewDocSnapshot.exists()) {
@@ -115,45 +112,93 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
           await setDoc(userDoc, { liked: true });
         }
       } catch (error) {
-        console.log('Error updating likes: ', error);
+        console.log('Error updating like: ', error);
       }
    }
 
    const handleDeletePress = async () => {
       try {
-        // Get the like document
-        const outfitDoc = doc(db, 'outfits', outfit.id);
-        // Get the user document
-        //const userDoc = doc(db, 'users', auth.currentUser.uid, 'outfits', outfit.id)
-        // Update the like document
+        Alert.alert(
+          texts.confirmDeleteAlertTitle,
+          texts.confirmDeleteAlertMessage,
+          [
+            {
+              text: texts.cancelDeleteAlertButton,
+              style: 'cancel',
+            },
+            {
+              text: texts.deleteDeleteAlertButton,
+              style: 'destructive',
+              onPress: async () => {
+                // Get the like document
+                const outfitDoc = doc(db, 'outfits', outfit.id);
 
-        await deleteDoc(outfitDoc);
-        //await deleteDoc(userDoc);
+                await deleteDoc(outfitDoc);
+                //await deleteDoc(userDoc);
 
-        closeOutfitModal();
+                closeOutfitModal();
+              },
+            },
+          ],
+          { cancelable: true }
+        );
       } catch (error) {
-        console.log('Error updating likes: ', error);
+        console.log('Error deleting outfit: ', error);
       }
     }
 
     const handleReportPress = async () => {
       try {
-        // Get the outfit document
-        const outfitDoc = doc(db, 'outfits', outfit.id);
-        // Update the outfit document
-        await setDoc(outfitDoc, { reported: true }, { merge: true });
-        
-        handleFilterReport();
-        
-        closeOutfitModal();
+        Alert.alert(
+          texts.confirmReportAlertTitle,
+          texts.confirmReportAlertMessage,
+          [
+            {
+              text: texts.cancelReportAlertButton,
+              style: 'cancel',
+            },
+            {
+              text: texts.reportReportAlertButton,
+              style: 'destructive',
+              onPress: async () => {
+                const outfitDoc = doc(db, 'outfits', outfit.id);
+                await setDoc(outfitDoc, { reported: true }, { merge: true });
+    
+                handleFilterReport();
+    
+                closeOutfitModal();
+              },
+            },
+          ],
+          { cancelable: true }
+        );
       } catch (error) {
         console.log('Error reporting outfit: ', error);
       }
-    }
+    };
 
 
   return (
-    <Modal animationType="slide" transparent={true} visible={isVisible}>
+    <Modal 
+      animationType="slide" 
+      transparent={true} 
+      visible={isVisible}
+    >
+
+      <SafeAreaView style={{ position: 'relative', zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            zIndex: 10,
+          }}
+          onPress={closeOutfitModal}
+        >
+          <Ionicons name="close" size={42} color="white" />
+        </TouchableOpacity>
+      </SafeAreaView>
+
       <PanGestureHandler
         onGestureEvent={onGestureEvent}
         onHandlerStateChange={onHandlerStateChange}
@@ -164,17 +209,40 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
             { transform: [{ translateY: translateY }] }, // Aplicar la transformación de translateY
           ]}
         >
+
           {outfit && 
             <View style={{}}>
-              <View style={{ position: 'relative' }}>
+              <View style={{ position: 'relative', height: (windowWidth * 0.8) / (2 / 3), borderRadius: 10 }}>
+                <ScrollView
+                  maximumZoomScale={3} // establece el máximo nivel de zoom que quieres
+                  minimumZoomScale={1} // establece el mínimo nivel de zoom
+                  centerContent={true} // centra el contenido
+                  showsHorizontalScrollIndicator={false} // oculta la barra de desplazamiento horizontal
+                  showsVerticalScrollIndicator={false} // oculta la barra de desplazamiento vertical
+                >
                   <Image
                       style={[containerStyles.modalOutfitImage, { width: windowWidth * 0.8, height: (windowWidth * 0.8) / (2 / 3) }]}
                       source={{ uri: outfit.imageUrl }}
                   />
+                </ScrollView>
 
-                  { auth.currentUser &&
+                { auth.currentUser &&
                   <TouchableOpacity
-                      style={{ position: 'absolute', bottom: 30, right: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: 5, paddingHorizontal: 10 }} 
+                      style={{ position: 'absolute', top: 5, left: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 20, padding: 3, paddingHorizontal: 10 }} 
+                      onPress={ outfit.postedBy === auth.currentUser.uid ? handleDeletePress : handleReportPress }
+                  >
+                      <Ionicons
+                          name={ outfit.postedBy === auth.currentUser.uid ? "trash-outline" : "flag" }
+                          size={20} 
+                          color={ 'white' }
+                      />
+                      <Text style={{ color: 'white', fontSize: 16, marginLeft: 5 }}>{ outfit.postedBy === auth.currentUser.uid ? texts.delete : texts.report }</Text>
+                  </TouchableOpacity>
+                }
+
+                { auth.currentUser &&
+                  <TouchableOpacity
+                      style={{ position: 'absolute', bottom: 10, right: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: 5, paddingHorizontal: 10 }} 
                       onPress={handleLikePress}
                   >
                       <Ionicons
@@ -184,7 +252,7 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
                       />
                       <Text style={{ color: 'white', fontSize: 16 }}>{likeCount}</Text>
                   </TouchableOpacity>
-                  }
+                }
               </View>
 
               {outfit.description && 
@@ -192,34 +260,25 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
                   {outfit.description} 
                 </Text>
               }
-
-              {auth.currentUser && (outfit.postedBy === auth.currentUser.uid ? 
-                <TouchableOpacity onPress = {handleDeletePress} style={[buttonStyles.greenButton, {backgroundColor: 'red', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}>
-                    <Ionicons name="trash-outline" size={24} color="#fff" />
-                    <Text style={[buttonStyles.greenButtonText, {marginLeft: 20}]}>
-                      {texts.delete}
-                    </Text>
-                </TouchableOpacity> : 
-                <TouchableOpacity onPress = {handleReportPress} style={[buttonStyles.greenButton, {backgroundColor: 'red', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}>
-                  <Ionicons name="flag" size={24} color="#fff" />
-                  <Text style={[buttonStyles.greenButtonText, {marginLeft: 20}]}>
-                    {texts.report}
-                  </Text>
-                </TouchableOpacity>
-                )
-              }
-
             </View>
-
           }
         </Animated.View>
       </PanGestureHandler>
-
     </Modal>
   )
 }
 
 export default OutfitModal
+
+// Zoom
+
+// Agregar comentarios
+
+// Que el documento reportado se agregue a la colección de reportados
+
+// Que el likeado doc tenga dentro toda la informacion documento del outfit
+
+// Que el view doc tenga dentro toda la informacion documento del outfit
 
 // Separar lógica de la vista: Separa la lógica de la vista en funciones auxiliares o hooks personalizados para mejorar la legibilidad y la reutilización del código.
 

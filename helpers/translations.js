@@ -1,3 +1,10 @@
+// const translations = {
+//   en: {
+//   },
+//   es: {
+//   },
+// }
+
 const translations = {
     en: {
       homeTitle: 'Home',
@@ -68,8 +75,20 @@ const translations = {
       resetPasswordMessage: 'An email with instructions to reset your password has been sent.',
       preparingImage: 'Preparing image...',
       addDescription: 'Add a Description',
-      imagePickerError: 'Error selecting image',
-      imageNotSelected: 'Please select an image',
+      confirmReportAlertTitle: 'Confirm Report',
+      confirmReportAlertMessage: 'Are you sure you want to report this post?',
+      cancelReportAlertButton: 'Cancel',
+      reportReportAlertButton: 'Report',
+      imagePickerError: 'There was an error while selecting the image.',
+      imageNotSelected: 'Please select an image before trying to upload.',
+      uploadError: 'There was an error while uploading the image.',
+      downloadURLError: 'There was an error while fetching the URL of the uploaded image.',
+      editImage: 'Edit Image',
+      confirmDeleteAlertTitle: 'Confirm Delete',
+      confirmDeleteAlertMessage: 'Are you sure you want to delete this post?',
+      cancelDeleteAlertButton: 'Cancel',
+      deleteDeleteAlertButton: 'Delete',
+      onlyPhotosAllowed: 'Only photos are allowed, for now.',
       terms: `
 Last update: April 22, 2023.
 
@@ -190,8 +209,20 @@ If you have any questions about these Terms, please contact us at vripfashion@gm
       resetPasswordMessage: 'Se ha enviado un correo electrónico con las instrucciones para resetear tu contraseña.',
       preparingImage: 'Preparando imagen...',
       addDescription: 'Añade una Descripción',
-      imagePickerError: "Hubo un error al seleccionar la imagen.",
-      imageNotSelected: "Por favor, selecciona una imagen para subir.",
+      confirmReportAlertTitle: 'Confirmar Reporte',
+      confirmReportAlertMessage: '¿Estás seguro/a de que quieres reportar esta publicación?',
+      cancelReportAlertButton: 'Cancelar',
+      reportReportAlertButton: 'Reportar',
+      imagePickerError: 'Hubo un error al seleccionar la imagen.',
+      imageNotSelected: 'Por favor seleccione una imagen antes de intentar subirla.',
+      uploadError: 'Hubo un error al subir la imagen.',
+      downloadURLError: 'Hubo un error al obtener la URL de la imagen subida.',
+      editImage: 'Editar Imagen',
+      confirmDeleteAlertTitle: 'Confirmar Eliminación',
+      confirmDeleteAlertMessage: '¿Estás seguro/a de que quieres eliminar esta publicación?',
+      cancelDeleteAlertButton: 'Cancelar',
+      deleteDeleteAlertButton: 'Eliminar',
+      onlyPhotosAllowed: 'Solo se permite subir fotos, de momento.',
       terms: `
 Última actualización: 22 de abril de 2023.
 

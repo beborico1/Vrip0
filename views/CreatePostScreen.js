@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Image, View, TextInput, Alert, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { Image, View, TextInput, Alert, Text, TouchableOpacity, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Button, ImageBackground } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -7,47 +7,51 @@ import { auth, db, storage } from '../firebaseConfig';
 import { buttonStyles, containerStyles, inputStyles } from '../helpers/styles';
 import { useNavigation } from '@react-navigation/native';
 import { LanguageContext } from '../helpers/LanguageContext';
+import * as Progress from 'react-native-progress';
+import colors from '../helpers/colors';
+import { ImageManipulator } from 'expo-image-crop'
 
 export default function CreatePostScreen() {
   const [image, setImage] = useState(null);
   const [description, setDescription] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [currentAsset, setCurrentAsset] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   const navigation = useNavigation();
 
   const { texts } = useContext(LanguageContext);
 
-  const pickImage = async () => {
-    try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
-        aspect: [2, 3],
-        quality: 0.1,
-      });
-  
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-        setCurrentAsset(result.assets[0]);
+  const pickImageHelper = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      console.log(result);
+      // Verificar el tipo de archivo
+      if (result.assets[0].type === 'video') {
+        Alert.alert('Error', texts.onlyPhotosAllowed);
+        return; // Salir de la función si es un video
       }
-    } catch (error) {
-      console.log(error);
-      Alert.alert("Error", texts.imagePickerError);
+
+      setImage(result.assets[0].uri);
+      //setIsVisible(true);
     }
   };
-  
-  const uploadImage = async () => {
-    // Validation: Ensure an image has been picked and a description entered
-    if (!currentAsset) {
-        Alert.alert("Error", texts.imageNotSelected);
-        return;
-    }
 
+  const onPictureChoosed = ({ uri }) => {
+    setImage(uri);
+    setIsVisible(false);
+    //uploadImage(uri);
+    //setEditImage(false); // Restablecer el estado de edición de la imagen después de editarla
+  }
+
+  const uploadImage = async (uri) => {
     let blob;
-
     try {
-      const response = await fetch(currentAsset.uri);
+      const response = await fetch(uri);
       blob = await response.blob();
 
       if (!auth.currentUser) {
@@ -55,9 +59,7 @@ export default function CreatePostScreen() {
       }
 
       const uid = auth.currentUser.uid;
-      
       const uploadRef = ref(storage, `outfits/${uid}/${Date.now()}`);
-      
       const uploadTask = uploadBytesResumable(uploadRef, blob);
 
       uploadTask.on('state_changed', 
@@ -69,7 +71,7 @@ export default function CreatePostScreen() {
         }, 
         (error) => {
           console.log(error);
-          Alert.alert("Error", "Hubo un error durante la subida de la imagen.");
+          Alert.alert("Error", texts.uploadError);
         }, 
         async () => {
           getDownloadURL(uploadRef).then( async (downloadURL) => {
@@ -86,56 +88,83 @@ export default function CreatePostScreen() {
               createdAt: serverTimestamp(),
             });
             setUploadProgress(0); // reset progress after upload
-
-            setCurrentAsset(null);
-
-            // Clean up blob resource
-            blob = null;
-
-            navigation.navigate("Home");
+            setImage(null); // Reset image and description state
+            setDescription(""); // Reset image and description state
+            navigation.navigate("Home"); // Navigate to Home screen
           }).catch(error => {
             console.log(error);
-            Alert.alert("Error", "Hubo un error al obtener la URL de la imagen subida.");
+            Alert.alert("Error", texts.uploadError);
           });
         }
       );
+
+      blob = null; // Clean up blob resource
     } catch (error) {
       console.log(error);
-      Alert.alert("Error", "Hubo un error al subir la imagen.");
-
+      Alert.alert("Error", texts.uploadError);
       blob = null;
     }
   };
 
   return (
-    <View style={containerStyles.container}>
-      {!image ? 
-        <TouchableOpacity style={styles.imagePlaceholder} onPress={pickImage}>
-          <Text style={styles.imagePlaceholderText}>+</Text>
-        </TouchableOpacity>
-        :
-        <TouchableOpacity onPress={pickImage}>
-          <Image source={{ uri: image }} style={{ width: 200, height: 300, marginBottom: 30 }} />
-        </TouchableOpacity>
-      }
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}> 
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={containerStyles.container}>
+        <View style={containerStyles.container}>
+          {!image ? 
+            <TouchableOpacity style={styles.imagePlaceholder} onPress={pickImageHelper}>
+              <Text style={styles.imagePlaceholderText}>+</Text>
+            </TouchableOpacity>
+            :
+            <TouchableOpacity onPress={pickImageHelper}>
+              <Image source={{ uri: image }} style={{ width: 200, height: 300, marginBottom: 10 }} />
+            </TouchableOpacity>
+          }
 
-      <TextInput
-        style={inputStyles.detailInput}
-        onChangeText={setDescription}
-        value={description}
-        placeholder={texts.addDescription}
-      />
+          {image && // Solo mostrar el botón de editar imagen si una imagen ha sido seleccionada
+            <TouchableOpacity onPress={() => setIsVisible(true)}>
+              <Text style={{color: colors.vrip, fontSize: 18, fontWeight: 'bold', marginBottom: 20}}>
+                  {texts.editImage}
+              </Text>
+            </TouchableOpacity>
+          }
 
-      <TouchableOpacity style={buttonStyles.greenButton} onPress={uploadImage} disabled={uploadProgress > 0}>
-        {uploadProgress > 0 ? 
-            <ActivityIndicator color="white" />
-                :
-            <Text style={buttonStyles.greenButtonText}>
-                {texts.uploadOutfit}
-            </Text>
-        }
-      </TouchableOpacity>
-    </View>
+          <TextInput
+            style={inputStyles.detailInput}
+            onChangeText={setDescription}
+            value={description}
+            placeholder={texts.addDescription}
+          />
+
+          {uploadProgress > 0 &&
+            <Progress.Bar 
+              progress={uploadProgress / 100} 
+              width={200} 
+              color={colors.vrip}
+              style={{marginVertical: 20}} 
+            />
+          }
+
+          {image && (
+            <ImageManipulator
+              photo={{ uri: image }}
+              isVisible={isVisible}
+              onPictureChoosed={onPictureChoosed}
+              onToggleModal={() => setIsVisible(false)}
+            />
+          )}
+
+          <TouchableOpacity style={buttonStyles.greenButton} onPress={() => uploadImage(image)} disabled={uploadProgress > 0}>
+            {uploadProgress > 0 ? 
+                <ActivityIndicator color="white" />
+                    :
+                <Text style={buttonStyles.greenButtonText}>
+                    {texts.uploadOutfit}
+                </Text>
+            }
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -146,31 +175,231 @@ const styles = StyleSheet.create({
       backgroundColor: 'lightgrey',
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 30,
+      marginBottom: 10,
     },
     imagePlaceholderText: {
       color: 'white',
       fontWeight: '400',
       fontSize: 80, // Adjust this size as needed
     },
-  });
+});
 
-// Separar lógica en funciones auxiliares: Puedes separar la lógica relacionada con la selección y carga de imágenes en funciones auxiliares para hacer el componente más legible y modular.
 
-// Validación de entrada: Agrega validación adicional para asegurarte de que la descripción no esté vacía antes de subir la imagen.
+// import React, { useContext, useState } from 'react';
+// import { Image, View, TextInput, Alert, Text, TouchableOpacity, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+// import * as ImagePicker from 'expo-image-picker';
+// import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+// import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+// import { auth, db, storage } from '../firebaseConfig';
+// import { buttonStyles, containerStyles, inputStyles } from '../helpers/styles';
+// import { useNavigation } from '@react-navigation/native';
+// import { LanguageContext } from '../helpers/LanguageContext';
+// import * as Progress from 'react-native-progress';
+// import colors from '../helpers/colors';
+// import * as ImageManipulator from 'expo-image-manipulator';
 
-// Manejo de errores mejorado: Mejora el manejo de errores al mostrar mensajes de error más descriptivos al usuario en caso de fallos durante la selección o carga de imágenes.
+// export default function CreatePostScreen() {
+//   const [image, setImage] = useState(null);
+//   const [description, setDescription] = useState("");
+//   const [uploadProgress, setUploadProgress] = useState(0);
+//   const [currentAsset, setCurrentAsset] = useState(null);
 
-// Internacionalización: Utiliza el contexto de idioma para localizar los mensajes de error y los textos mostrados al usuario.
+//   const navigation = useNavigation();
 
-// Optimización de la carga de imágenes: Evalúa la posibilidad de utilizar técnicas de compresión de imágenes o reducción de calidad para mejorar el rendimiento de la carga de imágenes, especialmente si la calidad de la imagen no es crítica para la aplicación.
+//   const { texts } = useContext(LanguageContext);
 
-// Mejorar la experiencia de usuario durante la carga: Considera mostrar un indicador de progreso más visual durante la carga de la imagen, como una barra de progreso animada.
+//   const processImage = async (pickedImage) => {
+//     const manipResult = await ImageManipulator.manipulateAsync(
+//       pickedImage.uri,
+//       [
+//         {
+//           crop: {
+//             originX: 0,
+//             originY: 0,
+//             width: pickedImage.width,
+//             height: Math.floor((2 / 3) * pickedImage.width),  // Ensure aspect ratio is 2:3
+//           },
+//         },
+//       ],
+//       { compress: 1, format: ImageManipulator.SaveFormat.PNG }
+//     );
+//     setImage(manipResult.uri);
+//     setCurrentAsset(manipResult);
+//   };
 
-// Manejo de permisos de acceso a la galería: Verifica y solicita los permisos necesarios para acceder a la galería de imágenes antes de permitir al usuario seleccionar una imagen.
+//   const pickImageHelper = async () => {   // Helper function for picking an image
+//     let result = await ImagePicker.launchImageLibraryAsync({
+//       mediaTypes: ImagePicker.MediaTypeOptions.All,
+//       allowsEditing: false,
+//       aspect: [2, 3],
+//       quality: 0.5,
+//     });
 
-// Validación de usuario autenticado: Además de verificar si auth.currentUser existe, puedes mostrar un mensaje de error o redirigir al usuario a la pantalla de inicio de sesión si no está autenticado.
+//     if (result.canceled) {
+//       setImage(null); 
+//       setCurrentAsset(null);
+//       setDescription("");
+//     } else {
+//       await processImage(result.assets[0]);
+//     }
 
-// Limpiar estado después de subir la imagen: Después de subir exitosamente la imagen y agregarla a la base de datos, puedes restablecer los estados image, description y uploadProgress para preparar el componente para una nueva carga de imagen.
+//     // let result = await ImagePicker.launchImageLibraryAsync({
+//       // mediaTypes: ImagePicker.MediaTypeOptions.All,
+//       // allowsEditing: false,
+//       // aspect: [2, 3],
+//       // quality: 0.5,
+//     // });
+// // 
+//     // if (result.canceled) {
+//       // setImage(null); // The user cancelled image selection, reset relevant states
+//       // setCurrentAsset(null);
+//       // setDescription("");
+//     // } else {
+//       // setImage(result.assets[0].uri);
+//       // setCurrentAsset(result.assets[0]);
+//     // }
+//   };
 
-// Manejo de cancelación de selección de imágenes: Si el usuario cancela la selección de una imagen, puedes restablecer los estados relacionados (image, description, currentAsset) para evitar cualquier estado inconsistente.
+//   const uploadImageHelper = async (blob) => { // Helper function for uploading an image
+//     const uid = auth.currentUser.uid;
+//     const uploadRef = ref(storage, `outfits/${uid}/${Date.now()}`);
+//     const uploadTask = uploadBytesResumable(uploadRef, blob);
+
+//     uploadTask.on('state_changed', 
+//       (snapshot) => {
+//         let progress = (snapshot.bytesTransferred / snapshot.totalBytes);
+//         progress = Math.round(progress * 100);
+//         console.log('Upload is ' + progress + '% done');
+//         setUploadProgress(progress);
+//       }, 
+//       (error) => {
+//         console.log(error);
+//         Alert.alert("Error", texts.uploadError);
+//       }, 
+//       async () => {
+//         getDownloadURL(uploadRef).then( async (downloadURL) => {
+//           console.log('File available at', downloadURL);
+//           setImage(downloadURL);
+//           const postsCollection = collection(db, 'outfits');
+//           await addDoc(postsCollection, {
+//             imageUrl: downloadURL,
+//             description: description,
+//             likeCount: 0,
+//             viewCount: 0,
+//             postedBy: uid,
+//             reported: false,
+//             createdAt: serverTimestamp(),
+//           });
+//           setUploadProgress(0); // reset progress after upload
+//           setCurrentAsset(null); // Reset currentAsset state
+//           setImage(null); // Reset image and description state
+//           setDescription(""); // Reset image and description state
+//           navigation.navigate("Home"); // Navigate to Home screen
+//         }).catch(error => {
+//           console.log(error);
+//           Alert.alert("Error", texts.uploadError);
+//         });
+//       }
+//     );
+//   };
+
+//   const pickImage = async () => {   // Functions called from the component
+//      try {
+//        await pickImageHelper();
+//      } catch (error) {
+//        console.log(error);
+//        Alert.alert("Error", texts.imagePickerError);
+//      }
+//   };
+
+//   const uploadImage = async () => {
+//     if (!currentAsset) { // Validation: Ensure an image has been picked and a description entered
+//       Alert.alert("Error", texts.imageNotSelected);
+//       return;
+//     }
+
+//     let blob;
+//     try {
+//       const response = await fetch(currentAsset.uri);
+//       blob = await response.blob();
+
+//       // Resize image using Resizer library from 'react-native-image-resizer' or from Expo SDK
+//       // const resizedImageUri = await Resizer.createResizedImage(blob.uri, 500, 500, 'JPEG', 80);
+//       // const response2 = await fetch(resizedImageUri);
+//       // blob = await response2.blob();
+
+//       if (!auth.currentUser) {
+//         return;
+//       }
+
+//       await uploadImageHelper(blob);
+
+//       blob = null; // Clean up blob resource
+//     } catch (error) {
+//       console.log(error);
+//       Alert.alert("Error", texts.uploadError);
+//       blob = null;
+//     }
+//   };
+
+//   return (
+//     <TouchableWithoutFeedback onPress={Keyboard.dismiss}> 
+//       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={containerStyles.container}>
+//         <View style={containerStyles.container}>
+//           {!image ? 
+//             <TouchableOpacity style={styles.imagePlaceholder} onPress={pickImage}>
+//               <Text style={styles.imagePlaceholderText}>+</Text>
+//             </TouchableOpacity>
+//             :
+//             <TouchableOpacity onPress={pickImage}>
+//               <Image source={{ uri: image }} style={{ width: 200, height: 300, marginBottom: 30 }} />
+//             </TouchableOpacity>
+//           }
+
+//           <TextInput
+//             style={inputStyles.detailInput}
+//             onChangeText={setDescription}
+//             value={description}
+//             placeholder={texts.addDescription}
+//           />
+
+//           {uploadProgress > 0 &&
+//             <Progress.Bar 
+//               progress={uploadProgress / 100} 
+//               width={200} 
+//               color={colors.vrip}
+//               style={{marginVertical: 20}} 
+//             />
+//           }
+
+
+//           <TouchableOpacity style={buttonStyles.greenButton} onPress={uploadImage} disabled={uploadProgress > 0}>
+//             {uploadProgress > 0 ? 
+//                 <ActivityIndicator color="white" />
+//                     :
+//                 <Text style={buttonStyles.greenButtonText}>
+//                     {texts.uploadOutfit}
+//                 </Text>
+//             }
+//           </TouchableOpacity>
+//         </View>
+//       </KeyboardAvoidingView>
+//     </TouchableWithoutFeedback>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//     imagePlaceholder: {
+//       width: 200,
+//       height: 300,
+//       backgroundColor: 'lightgrey',
+//       justifyContent: 'center',
+//       alignItems: 'center',
+//       marginBottom: 30,
+//     },
+//     imagePlaceholderText: {
+//       color: 'white',
+//       fontWeight: '400',
+//       fontSize: 80, // Adjust this size as needed
+//     },
+//   });

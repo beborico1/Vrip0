@@ -20,7 +20,8 @@ const LoginScreen = () => {
   // Función para enviar el email de reseteo de contraseña
   const sendResetPasswordEmail = async (email) => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      const result = await sendPasswordResetEmail(auth, email);
+      console.log(result);
       Alert.alert(texts.resetPasswordTitle, texts.resetPasswordMessage);
       setErrorMessage(null);
     } catch (error) {

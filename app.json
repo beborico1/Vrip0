@@ -2,7 +2,7 @@
   "expo": {
     "name": "Vrip",
     "slug": "vrip0",
-    "version": "1.0.7",
+    "version": "1.1.0",
     "orientation": "portrait",
     "privacy": "public",
     "icon": "./assets/icon.png",
@@ -18,7 +18,7 @@
     "ios": {
       "bundleIdentifier": "com.vrip.vripapp",
       "supportsTablet": true,
-      "buildNumber": "1.0.7",
+      "buildNumber": "1.1.0",
       "infoPlist": {
         "NSCameraUsageDescription": "This app requires access to the camera to take photos for creating a post.",
         "NSPhotoLibraryUsageDescription": "This app requires access to the photo library to select images for creating a post.",
