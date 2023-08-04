@@ -7,16 +7,20 @@ import { deleteDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons'; // Añadir esta línea para importar iconos
 import { LanguageContext } from '../../helpers/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [username, setUsername] = useState(null);
+  const [user, setUser] = useState(null);
   const [loadingUsername, setLoadingUsername] = useState(true);
 
   const { texts } = useContext(LanguageContext);
 
   const insets = useSafeAreaInsets();
+
+  const navigation = useNavigation();
   
 
   useEffect(() => {
@@ -191,6 +195,7 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
         const userDoc = doc(db, 'users', outfit.postedBy);
         const userDocSnapshot = await getDoc(userDoc);
         const user = userDocSnapshot.data();
+        setUser({ id: userDocSnapshot.id, ...user });
         setUsername(user.username);
       } catch (error) {
         setLoadingUsername(false);
@@ -288,17 +293,25 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
                 }
               </View>
 
-              { username ?
-              <Text
-                style={{
-                  paddingVertical: 10,
-                  paddingHorizontal: 10,
-                  fontSize: 16,
-                  fontWeight: '500',
+              { username && user ?
+              <TouchableOpacity
+                onPress={() => {
+                  closeOutfitModal();
+                  navigation.navigate('Profile', { result: user });
                 }}
               >
-                @{username}
-              </Text> :
+                <Text
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 10,
+                    fontSize: 16,
+                    fontWeight: '500',
+                  }}
+                >
+                  @{username}
+                </Text>
+              </TouchableOpacity>
+              :
               <Text
                 style={{
                   paddingVertical: 10,
@@ -334,8 +347,6 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
 }
 
 export default OutfitModal
-
-// Zoom
 
 // Agregar comentarios
 

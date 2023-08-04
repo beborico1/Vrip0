@@ -80,6 +80,8 @@ export default function CreatePostScreen() {
             const postsCollection = collection(db, 'outfits');
             await addDoc(postsCollection, {
               imageUrl: downloadURL,
+              thumbnail: downloadURL,
+              icon: downloadURL,
               description: description,
               likeCount: 0,
               viewCount: 0,

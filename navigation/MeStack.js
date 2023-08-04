@@ -10,6 +10,7 @@ import LogOutMenu from '../components/LogOutMenu';
 import { auth } from '../firebaseConfig';
 import { TouchableOpacity, Text } from 'react-native';
 import { textStyles } from '../helpers/styles';
+import { Feather } from '@expo/vector-icons';
 
 const Stack = createStackNavigator();
 
@@ -30,7 +31,12 @@ const MeStack = () => {
                 <TouchableOpacity
                   onPress={() => navigation.navigate('SettingsScreen')}
                 >
-                  <Text style={[textStyles.greenLabel, { paddingHorizontal: 10 }]}>{texts.settings}</Text>
+                  <Feather 
+                    name="settings"
+                    size={26} 
+                    color={colors.vrip}
+                    style={{ paddingRight: 15 }}
+                  />
                 </TouchableOpacity> : null
               ),
             })}

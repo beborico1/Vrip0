@@ -1,7 +1,7 @@
 import { View, Image, TouchableOpacity, TextInput, Text, ActivityIndicator, Keyboard } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { auth, db } from '../firebaseConfig'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore'
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Alert } from 'react-native';
@@ -99,7 +99,7 @@ const UserHeader = () => {
         console.log(userDoc.data());
         setUserDoc({ ...userDoc.data(), id: userDoc.id });
         setOriginalUserDoc({ ...userDoc.data(), id: userDoc.id });
-        setImage(userDoc.data().profile_picture);
+        //setImage(userDoc.data().profile_picture);
       } else {
         console.log("No such document!");
       }
@@ -108,6 +108,8 @@ const UserHeader = () => {
     const handleInputChange = async (field, value) => {
       if (field === 'username') {
         value = value.replace(/\s/g, ''); // Eliminar espacios en blanco
+        value = value.replace(/[^\w\s]/gi, ''); // esto eliminara todos los caracteres especiales como tildes, ñ, etc.
+        value = value.replace(/@/gi, ''); // eliminar @, gi significa global y case insensitive
       }
 
       setUserDoc({ ...userDoc, [field]: value });
@@ -117,7 +119,33 @@ const UserHeader = () => {
     };
 
     const handleSaveChanges = async () => {
+      if (!auth.currentUser) {
+        console.log('No user is signed in');
+        return;
+      }
+
+      if (loading) {
+        return;
+      }
+
       setLoading(true);
+
+      if (userDoc.username !== originalUserDoc.username) {
+        const querySnapshot = await getDocs(query(collection(db, 'users'), where('username', '==', userDoc.username)));
+        if (querySnapshot.size > 0) {
+          Alert.alert('Error', texts.usernameAlreadyInUse);
+          setLoading(false);
+          return;
+        }
+
+        if (userDoc.username.length === 0) {
+          Alert.alert('Error', texts.usernameCannotBeEmpty);
+          setLoading(false);
+          return;
+        }
+      }
+
+
       Keyboard.dismiss();
 
       const userDocRef = doc(db, 'users', auth.currentUser.uid);
@@ -217,7 +245,6 @@ const UserHeader = () => {
               <ActivityIndicator size="large" color={colors.vrip}/>
              </View>
           )}
-
         </View>
     )
 }

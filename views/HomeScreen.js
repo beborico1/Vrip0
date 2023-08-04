@@ -11,6 +11,9 @@ import { LogBox } from 'react-native';
 import colors from '../helpers/colors';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, getDocs, doc, setDoc, serverTimestamp, collectionGroup, query, where } from "firebase/firestore";
+import { db } from '../firebaseConfig';
 
 LogBox.ignoreAllLogs();
 
@@ -51,71 +54,71 @@ const HomeScreen = () => {
 
   return (
     <>
-    <OutfitModal
-      outfit = {selectedOutfit}
-      isVisible={selectedOutfit !== null}
-      closeOutfitModal={() => setSelectedOutfit(null)}
-      handleFilterReport = {handleFilterReport}
-    />
+      <OutfitModal
+        outfit={selectedOutfit}
+        isVisible={selectedOutfit !== null}
+        closeOutfitModal={() => setSelectedOutfit(null)}
+        handleFilterReport={handleFilterReport}
+      />
 
-    <View style={containerStyles.container}>
-      {/* <FeedHeader title = {texts.communityOutfits} /> */}
+      <View style={[containerStyles.container]}>
+        {/* <FeedHeader title = {texts.communityOutfits} /> */}
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderColor: 'gray', borderWidth: 1, margin: 8, paddingHorizontal: 8, borderRadius: 8 }}>
-        <Ionicons name="search" size={24} color="black" />
-        <TextInput
-          value={query}
-          onChangeText={text => setQuery(text)}
-          placeholder={texts.searchForUsers}
-          style={{ height: 40, flex: 1, marginLeft: 8 }}
-        />
-        { query &&
-          <Button
-            title={texts.cancel}
-            color={colors.vrip}
-            onPress={() => {
-              setQuery('');
-              Keyboard.dismiss();
-            }
-            }
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderColor: 'gray', borderWidth: 1, margin: 8, paddingHorizontal: 8, borderRadius: 8 }}>
+          <Ionicons name="search" size={24} color="black" />
+          <TextInput
+            value={query}
+            onChangeText={text => setQuery(text)}
+            placeholder={texts.searchForUsers}
+            style={{ height: 40, flex: 1, marginLeft: 8 }}
           />
-        }
-      </View>
-
-      { query ? 
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          {loadingAlgolia ? <ActivityIndicator size="large" color={colors.vrip} /> :
-          errorAlgolia ? <Text>Error: {errorAlgolia.message}</Text> :
-          <ScrollView>
-            {results.map((result, index) => (
-              <TouchableOpacity key={index} onPress={() => {
+          {query &&
+            <Button
+              title={texts.cancel}
+              color={colors.vrip}
+              onPress={() => {
                 setQuery('');
-                navigation.navigate('Profile', { result })
-              }}
-              >
-              <View key={index} style={{ padding: 10, marginBottom: 5, backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', alignItems: 'center', shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 }, width: windowWidth * 0.9, marginHorizontal: 3 }}>
-                <Image source={result.profile_picture ? {uri: result.profile_picture} : require('../assets/default-profile-picture.png')} style={{width: 50, height: 50, borderRadius: 25}} />
-                <Text
-                  style={{ marginLeft: 10, fontSize: 16, fontWeight: '500' }}
-                >
-                  @{result.username}
-                </Text>
-              </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                Keyboard.dismiss();
+              }
+              }
+            />
           }
         </View>
-          :
-        <Outfits
-          outfits = {outfits}
-          loading = {loading}
-          error = {error}
-          onOutfitPress = {onOutfitPress}
-        />
-      }
 
-    </View>
+        {query ?
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            {loadingAlgolia ? <ActivityIndicator size="large" color={colors.vrip} /> :
+              errorAlgolia ? <Text>Error: {errorAlgolia.message}</Text> :
+                <ScrollView>
+                  {results.map((result, index) => (
+                    <TouchableOpacity key={index} onPress={() => {
+                      setQuery('');
+                      navigation.navigate('Profile', { result })
+                    }}
+                    >
+                      <View key={index} style={{ padding: 10, marginBottom: 5, backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', alignItems: 'center', shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 }, width: windowWidth * 0.9, marginHorizontal: 3 }}>
+                        <Image source={result.profile_picture ? { uri: result.profile_picture } : require('../assets/default-profile-picture.png')} style={{ width: 50, height: 50, borderRadius: 25 }} />
+                        <Text
+                          style={{ marginLeft: 10, fontSize: 16, fontWeight: '500' }}
+                        >
+                          @{result.username}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+            }
+          </View>
+          :
+          <Outfits
+            outfits={outfits}
+            loading={loading}
+            error={error}
+            onOutfitPress={onOutfitPress}
+          />
+        }
+
+      </View>
     </>
   )
 }

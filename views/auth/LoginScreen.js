@@ -1,4 +1,4 @@
-import { doc, getDoc } from '@firebase/firestore';
+import { doc, getDoc, query, where, getDocs, collection } from '@firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useCallback, useState } from 'react';
@@ -51,41 +51,62 @@ const LoginScreen = () => {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-      .then(async (userCredential) => {
-        console.log('User logged in successfully: ',userCredential);
-        
-        const user = userCredential.user;
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-        //   dispatch(login(userDoc.data()));
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
           navigation.navigate("MeScreen")
-        } else {
-          console.log("No user document found!");
-        }
-      })
+      } else {
+          throw new Error("No user document found!");
+      }
     } catch (error) {
-      setLoading(false);
-      switch (error.code) {
-        case 'auth/user-not-found':
-          setErrorMessage(texts.userNotFound);
-          break;
-        case 'auth/wrong-password':
+      console.log(error);
+      setLoading(false)
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
+          handleUsernameLogin();
+      } else if (error.code === 'auth/wrong-password') {
           setErrorMessage(texts.incorrectPassword);
-          break;
-        case 'auth/invalid-email':
-          setErrorMessage(texts.invalidEmail);
-          break;
-        case 'auth/email-already-in-use':
+      } else if (error.code === 'auth/email-already-in-use') {
           setErrorMessage(texts.emailInUse);
-          break;
-        default:
+      } else {
           setErrorMessage(texts.signInError);
-          break;
       }
     }
+  }, [email, password]);  
+
+  const handleUsernameLogin = useCallback(async () => {
+      // username is email but replace @ with empty string
+      const username = email.replace("@", "");
+      console.log(username);
+      setLoading(true);
+      try {
+          const querySnapshot = await getDocs(query(collection(db, 'users'), where('username', '==', username)));
+          if (querySnapshot.empty) {
+              throw new Error("No user document found with that username!");
+          }
+
+          const userDoc = querySnapshot.docs[0];
+          if (userDoc) {
+              const userCredential = await signInWithEmailAndPassword(auth, userDoc.data().email, password);
+              navigation.navigate("MeScreen");
+          }
+      } catch (error) {
+        console.log(error);
+        setLoading(false)
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
+            handleUsernameLogin();
+        } else if (error.code === 'auth/wrong-password') {
+            setErrorMessage(texts.incorrectPassword);
+        } else if (error.code === 'auth/email-already-in-use') {
+            setErrorMessage(texts.emailInUse);
+        } else {
+            setErrorMessage(texts.signInError);
+        }
+      }
   }, [email, password]);
+
 
   return (
     <KeyboardAvoidingView behavior="padding" style={containerStyles.container}>
@@ -94,7 +115,7 @@ const LoginScreen = () => {
           <Text style={textStyles.title}>{texts.welcomeBack}</Text>
           <TextInput
             style={inputStyles.input}
-            placeholder={texts.email}
+            placeholder={texts.emailOrUsername}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"

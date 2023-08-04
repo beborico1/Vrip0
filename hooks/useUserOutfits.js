@@ -33,7 +33,7 @@ const useUserOutfits = (uid) => {
 
   }, [uid]); // Agrega uid a la lista de dependencias para refrescar la consulta si cambia
 
-  return { loading, error, outfits };
+  return { loading, error, outfits, setOutfits };
 };
 
 export default useUserOutfits;

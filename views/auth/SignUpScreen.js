@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useNavigation } from '@react-navigation/native';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDocs, query, collection, where } from 'firebase/firestore';
 import * as Localization from 'expo-localization';
 import { auth, db } from '../../firebaseConfig';
 import translations from '../../helpers/translations';
@@ -11,6 +11,7 @@ import { buttonStyles, containerStyles, inputStyles, textStyles } from '../../he
 const SignUpScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(''); // Agregamos un nuevo campo para el nombre de usuario
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +23,20 @@ const SignUpScreen = () => {
   const texts = translations[locale] || translations.en; // Selecciona las traducciones correspondientes al idioma actual, y si no se encuentra, usa inglés por defecto
 
   const handleSignUp = useCallback(async () => {
+    if (email === '' || password === '' || username === '') {
+      setErrorMessage(texts.emptyFields);
+      return;
+    }
+
+    const querySnapshot = await getDocs(query(collection(db, 'users'), where('username', '==', username)));
+    
+    if (querySnapshot.size > 0) {
+      setErrorMessage(texts.usernameAlreadyInUse);
+      setLoading(false);
+      return;
+    }
+
+    setErrorMessage(null);
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password)
@@ -32,11 +47,11 @@ const SignUpScreen = () => {
         setDoc(doc(db, "users", user.uid), {  // Crea un documento en Firestore para almacenar la información del usuario
             email: user.email,
             uid: user.uid,
+            username,
             created_at: serverTimestamp(),
             locales,
             presentation:"",
             profile_picture:"",
-            username:"",
             name:"",
         });
 
@@ -60,12 +75,27 @@ const SignUpScreen = () => {
       }
     }
   }, [email, password]);
+
+  const handleUsernameChange = async (value) => {
+      value = value.replace(/\s/g, ''); // Eliminar espacios en blanco
+      value = value.replace(/[^\w\s]/gi, ''); // esto eliminara todos los caracteres especiales como tildes, ñ, etc.
+      value = value.replace(/@/gi, ''); // eliminar @, gi significa global y case insensitive
+      setUsername(value);
+  }
   
   return (
     <KeyboardAvoidingView behavior="padding" style={containerStyles.container}>
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <View style={containerStyles.container}>
           <Text style={textStyles.title}>{texts.welcome}</Text>
+          <TextInput
+            placeholder={texts.username}
+            autoCapitalize="none"
+            style={inputStyles.input}
+            onChangeText={value => handleUsernameChange(value)}
+            value={username}
+            placeholderTextColor={"#CCCCCC"}
+          />
           <TextInput
             placeholder={texts.emailAddress}
             autoCapitalize="none"

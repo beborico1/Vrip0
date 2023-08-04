@@ -8,6 +8,10 @@ import colors from '../helpers/colors';
 import { UserContext } from '../helpers/UserContext';
 import { LanguageContext } from '../helpers/LanguageContext';
 import ProfileScreen from '../views/ProfileScreen';
+import NotificationsScreen from '../views/NotificationsScreen';
+import { Ionicons } from '@expo/vector-icons'; // Añadir esta línea para importar iconos
+import { Feather } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 const Stack = createStackNavigator();
 
@@ -26,8 +30,28 @@ const HomeStack = () => {
                 user ? 
                 <TouchableOpacity
                   onPress={() => navigation.navigate('CreatePost')}
-                  >
-                  <Text style={[textStyles.greenLabel, { paddingHorizontal: 10 }]}>{texts.post}</Text>
+                  style={{ flexDirection: 'row', alignItems: 'center' }}
+                >
+                  <Feather 
+                    name="plus-square" 
+                    size={26} 
+                    color={colors.vrip} 
+                    style={{ paddingRight: 15, marginTop: 2 }}
+                  />
+                </TouchableOpacity> : null
+              ),
+              headerLeft: () => (
+                user ?
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Notifications')}
+                  style={{ flexDirection: 'row', alignItems: 'center' }}
+                >
+                  <FontAwesome5 
+                    name="bell" 
+                    size={24} 
+                    color={colors.vrip}
+                    style={{ paddingLeft: 15 }}
+                  />
                 </TouchableOpacity> : null
               ),
             })}
@@ -45,6 +69,14 @@ const HomeStack = () => {
             component={ProfileScreen}
             options={{
               title: texts.profileScreenTitle,
+              headerTintColor: colors.vrip,
+            }}
+          />
+          <Stack.Screen
+            name="Notifications"
+            component={NotificationsScreen}
+            options={{
+              title: texts.notificationsScreenTitle,
               headerTintColor: colors.vrip,
             }}
           />

@@ -29,7 +29,7 @@ const Outfits = ({ loading, error, outfits,onOutfitPress }) => {
         onPress={() => onOutfitPress(item)}
         style={[containerStyles.outfitContainer, { width: windowWidth / 3, height: windowWidth / 2, backgroundColor: 'lightgrey', borderColor: 'white', borderWidth: 1 }]}
       >
-        <Image source={{ uri: item.imageUrl }} style={{ height: windowWidth / 2, width: windowWidth / 3, resizeMode: 'cover' }} />
+        <Image source={{ uri: item.thumbnail }} style={{ height: windowWidth / 2, width: windowWidth / 3, resizeMode: 'cover' }} />
       </TouchableOpacity>
     );
   };
