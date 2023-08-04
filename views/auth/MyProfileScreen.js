@@ -5,8 +5,9 @@ import useMyOutfits from '../../hooks/useMyOutfits';
 import Outfits from '../../components/Outfits';
 import { LanguageContext } from '../../helpers/LanguageContext';
 import OutfitModal from '../modals/OutfitModal';
+import UserHeader from '../../components/UserHeader';
 
-const ProfileScreen = () => {
+const MyProfileScreen = () => {
   const { texts } = React.useContext(LanguageContext);
 
   const { loading, error, outfits } = useMyOutfits();
@@ -26,7 +27,7 @@ const ProfileScreen = () => {
         closeOutfitModal={() => setSelectedOutfit(null)}
       />
       <View>
-        <FeedHeader title={texts.myOutfits}/>
+        <UserHeader />
     
         <Outfits
           outfits = {outfits}
@@ -40,7 +41,7 @@ const ProfileScreen = () => {
   )
 }
 
-export default ProfileScreen
+export default MyProfileScreen
 
 // Mejora en la estructura del componente: Considera envolver todo el contenido del componente en un contenedor principal, como un View, para asegurarte de que el diseño esté correctamente estructurado y evitar problemas de diseño.
 

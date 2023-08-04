@@ -1,7 +1,7 @@
 import { View } from 'react-native'
 import React from 'react'
 import MeMenu from '../components/MeMenu'
-import ProfileScreen from './auth/ProfileScreen';
+import MyProfileScreen from './auth/MyProfileScreen';
 import { UserContext } from '../helpers/UserContext';
 
 const MeScreen = () => {
@@ -11,7 +11,7 @@ const MeScreen = () => {
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", width: "100%" }}> 
         {user ? 
-            <ProfileScreen/>
+            <MyProfileScreen/>
             : 
             <MeMenu/>
         }

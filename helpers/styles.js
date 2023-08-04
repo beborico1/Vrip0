@@ -21,8 +21,6 @@ export const containerStyles = StyleSheet.create({
   modalOutfitImage: {
     resizeMode: 'cover',
     backgroundColor: '#f5f5f5',
-    borderRadius: 10, // Añadir bordes redondeados a la imagen
-    marginBottom: 20, // Añadir espacio debajo de la imagen
   },
   errorContainer: {
     padding: 10,

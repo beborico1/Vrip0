@@ -7,6 +7,7 @@ import { textStyles } from '../helpers/styles';
 import colors from '../helpers/colors';
 import { UserContext } from '../helpers/UserContext';
 import { LanguageContext } from '../helpers/LanguageContext';
+import ProfileScreen from '../views/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -39,6 +40,15 @@ const HomeStack = () => {
               headerTintColor: colors.vrip,
             }}
           />
+          <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{
+              title: texts.profileScreenTitle,
+              headerTintColor: colors.vrip,
+            }}
+          />
+          
       </Stack.Navigator>
     )
 }

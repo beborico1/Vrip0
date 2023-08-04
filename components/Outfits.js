@@ -8,7 +8,7 @@ const Outfits = ({ loading, error, outfits,onOutfitPress }) => {
   const { texts } = React.useContext(LanguageContext);
   
   const windowWidth = useWindowDimensions().width;
-  
+
   if (loading) {
     return  <View style={[containerStyles.container, {width: windowWidth}]}>
               <ActivityIndicator size="large" color={ colors.vrip } style={containerStyles.loadingIndicator} />
@@ -35,13 +35,13 @@ const Outfits = ({ loading, error, outfits,onOutfitPress }) => {
   };
 
   return (
-    <View style={containerStyles.container }>
+    <View style={[containerStyles.container, {width: windowWidth}] }>
        <FlatList
          data={outfits}
          renderItem={renderItem}
          keyExtractor={(item) => item.id}
          numColumns={3}
-         columnWrapperStyle={{ flexDirection: 'row', justifyContent: 'flex-start' }}
+         columnWrapperStyle={{ flexDirection: 'row', justifyContent: 'flex-start', width: windowWidth }}
        />
     </View>
   )

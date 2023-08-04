@@ -10,7 +10,6 @@ import LogOutMenu from '../components/LogOutMenu';
 import { auth } from '../firebaseConfig';
 import { TouchableOpacity, Text } from 'react-native';
 import { textStyles } from '../helpers/styles';
-import { useNavigation } from '@react-navigation/native';
 
 const Stack = createStackNavigator();
 
@@ -19,8 +18,6 @@ const MeStack = () => {
       const locale = Localization.locale.slice(0, 2); // Obtiene el código de idioma de dos letras (por ejemplo, 'en' o 'es')
       const texts = translations[locale] || translations.en; // Selecciona las traducciones correspondientes al idioma actual, y si no se encuentra, usa inglés por defecto
 
-      const navigation = useNavigation();
-      
       return (
         <Stack.Navigator>
           <Stack.Screen

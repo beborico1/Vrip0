@@ -89,6 +89,12 @@ const translations = {
       cancelDeleteAlertButton: 'Cancel',
       deleteDeleteAlertButton: 'Delete',
       onlyPhotosAllowed: 'Only photos are allowed, for now.',
+      searchForUsers: 'Search for users',
+      userDeleted: 'User deleted',
+      cancelChanges: 'Cancel',
+      saveChanges: 'Save Changes',
+      profileScreenTitle: 'Profile',
+      noOutfits: 'No outfits yet',
       terms: `
 Last update: April 22, 2023.
 
@@ -223,6 +229,12 @@ If you have any questions about these Terms, please contact us at vripfashion@gm
       cancelDeleteAlertButton: 'Cancelar',
       deleteDeleteAlertButton: 'Eliminar',
       onlyPhotosAllowed: 'Solo se permite subir fotos, de momento.',
+      searchForUsers: 'Buscar usuarios',
+      userDeleted: 'Usuario eliminado',
+      cancelChanges: 'Cancelar',
+      saveChanges: 'Guardar Cambios',
+      profileScreenTitle: 'Perfil',
+      noOutfits: 'Aún no hay atuendos',
       terms: `
 Última actualización: 22 de abril de 2023.
 

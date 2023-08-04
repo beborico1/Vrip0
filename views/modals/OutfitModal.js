@@ -1,17 +1,23 @@
-import { Animated, Dimensions, Image, Modal, TouchableOpacity, View, Text, Alert, SafeAreaView, ScrollView } from 'react-native'
+import { Animated, Dimensions, Image, Modal, TouchableOpacity, View, Text, Alert, ScrollView } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
-import { buttonStyles, containerStyles } from '../../helpers/styles'
+import { containerStyles } from '../../helpers/styles'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { auth, db } from '../../firebaseConfig';
 import { deleteDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons'; // Añadir esta línea para importar iconos
 import { LanguageContext } from '../../helpers/LanguageContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [username, setUsername] = useState(null);
+  const [loadingUsername, setLoadingUsername] = useState(true);
 
   const { texts } = useContext(LanguageContext);
+
+  const insets = useSafeAreaInsets();
+  
 
   useEffect(() => {
     const fetchLikes = async () => {
@@ -177,6 +183,26 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
       }
     };
 
+    const fetchUsername = async () => {
+      if (!outfit) {
+        return;
+      }
+      try {
+        const userDoc = doc(db, 'users', outfit.postedBy);
+        const userDocSnapshot = await getDoc(userDoc);
+        const user = userDocSnapshot.data();
+        setUsername(user.username);
+      } catch (error) {
+        setLoadingUsername(false);
+        console.log('Error fetching user: ', error);
+      }
+    };
+
+    useEffect(() => {
+      setUsername(null);
+      setLoadingUsername(true);
+      fetchUsername();
+    }, [outfit]);
 
   return (
     <Modal 
@@ -184,21 +210,6 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
       transparent={true} 
       visible={isVisible}
     >
-
-      <SafeAreaView style={{ position: 'relative', zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <TouchableOpacity
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            zIndex: 10,
-          }}
-          onPress={closeOutfitModal}
-        >
-          <Ionicons name="close" size={42} color="white" />
-        </TouchableOpacity>
-      </SafeAreaView>
-
       <PanGestureHandler
         onGestureEvent={onGestureEvent}
         onHandlerStateChange={onHandlerStateChange}
@@ -210,9 +221,31 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
           ]}
         >
 
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            top: 2 + insets.top,  // Se añade el inset superior aquí
+            right: 10,
+            zIndex: 10,
+          }}
+          onPress={closeOutfitModal}
+        >
+          <Ionicons name="close" size={42} color="white" />
+        </TouchableOpacity>
+
           {outfit && 
-            <View style={{}}>
-              <View style={{ position: 'relative', height: (windowWidth * 0.8) / (2 / 3), borderRadius: 10 }}>
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 10,
+              }}
+            >
+              <View style={{ 
+                position: 'relative', 
+                height: (windowWidth * 0.8) / (2 / 3), 
+                borderTopLeftRadius: 10, borderTopRightRadius: 10,
+                overflow: 'hidden'  // Agregamos esto
+              }}>             
                 <ScrollView
                   maximumZoomScale={3} // establece el máximo nivel de zoom que quieres
                   minimumZoomScale={1} // establece el mínimo nivel de zoom
@@ -242,7 +275,7 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
 
                 { auth.currentUser &&
                   <TouchableOpacity
-                      style={{ position: 'absolute', bottom: 10, right: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: 5, paddingHorizontal: 10 }} 
+                      style={{ position: 'absolute', bottom: 15, right: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: 5, paddingHorizontal: 10 }} 
                       onPress={handleLikePress}
                   >
                       <Ionicons
@@ -255,8 +288,38 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
                 }
               </View>
 
+              { username ?
+              <Text
+                style={{
+                  paddingVertical: 10,
+                  paddingHorizontal: 10,
+                  fontSize: 16,
+                  fontWeight: '500',
+                }}
+              >
+                @{username}
+              </Text> :
+              <Text
+                style={{
+                  paddingVertical: 10,
+                  paddingHorizontal: 10,
+                  fontSize: 16,
+                  fontWeight: '400',
+                  color: 'gray',
+                }}
+              >
+                Cargando ...
+              </Text> }
+
               {outfit.description && 
-                <Text style={{ color: 'white', fontSize: 18, width: windowWidth * 0.8, textAlign: 'center', marginBottom: 20}}>
+                <Text
+                  style={{
+                    paddingBottom: 10,
+                    paddingHorizontal: 12,
+                    fontSize: 16,
+                    color: 'gray',
+                  }}
+                >
                   {outfit.description} 
                 </Text>
               }
@@ -264,7 +327,9 @@ const OutfitModal = ({outfit, isVisible, closeOutfitModal, handleFilterReport })
           }
         </Animated.View>
       </PanGestureHandler>
+
     </Modal>
+
   )
 }
 
