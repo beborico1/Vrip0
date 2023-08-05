@@ -1,4 +1,4 @@
-import { View, TextInput, TouchableOpacity, Text, ScrollView, Keyboard } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, ScrollView, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import React, { useEffect, useState, useCallback, memo } from 'react';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import colors from '../helpers/colors';
@@ -98,7 +98,8 @@ const ChatScreen = () => {
         initConversation();
     }, []);
 
-    const handleSendMessage = async () => {
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
         if (message !== '' && conversationId) {
             await addDoc(collection(db, `conversations/${conversationId}/messages`), {
                 text: message,
@@ -117,45 +118,49 @@ const ChatScreen = () => {
 
     useEffect(() => {
         scrollViewRef.current?.scrollToEnd({ animated: false });
-    }, [messages]);    
+    }, [messages]);
 
     return (
-        <KeyboardAwareScrollView
-            contentContainerStyle={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 10 }}
-            keyboardShouldPersistTaps="always"
-        >
-            <View style={{ paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 }}>
-                <ScrollView
-                    ref={scrollViewRef}
-                    keyboardShouldPersistTaps="always"
-                >
-                    {messages.map((item, index) => <Message key={index} item={item} index={index} />)}
-                </ScrollView>
-            </View>
-
-            <View
-                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', padding: 10, height: 40, marginLeft: 8, marginRight: 8, borderRadius: 5, shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 } }}
+        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+            <KeyboardAwareScrollView
+                contentContainerStyle={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 10 }}
+                keyboardShouldPersistTaps="always"
             >
-                <TextInput
-                    placeholder="Escribe un mensaje"
-                    style={{ height: 40, flex: 1, marginLeft: 8 }}
-                    value={message}
-                    onChangeText={handleChange}
-                    onSubmitEditing={handleSendMessage}
-                />
-                <TouchableOpacity
-                    onPress={handleSendMessage}
-                >
-                    {message !== '' &&
-                        <Text
-                            style={{ color: colors.vrip, fontWeight: '500', fontSize: 16 }}
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                    <View style={{ paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 }}>
+                        <ScrollView
+                            ref={scrollViewRef}
+                            keyboardShouldPersistTaps="always"
                         >
-                            Enviar
-                        </Text>
-                    }
-                </TouchableOpacity>
-            </View>
-        </KeyboardAwareScrollView>
+                            {messages.map((item, index) => <Message key={index} item={item} index={index} />)}
+                        </ScrollView>
+                    </View>
+                </TouchableWithoutFeedback>
+
+                <View
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', padding: 10, height: 40, marginLeft: 8, marginRight: 8, borderRadius: 5, shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 } }}
+                >
+                    <TextInput
+                        placeholder="Escribe un mensaje"
+                        style={{ height: 40, flex: 1, marginLeft: 8 }}
+                        value={message}
+                        onChangeText={handleChange}
+                        onSubmitEditing={handleSendMessage}
+                    />
+                    <TouchableOpacity
+                        onPress={handleSendMessage}
+                    >
+                        {message !== '' &&
+                            <Text
+                                style={{ color: colors.vrip, fontWeight: '500', fontSize: 16 }}
+                            >
+                                Enviar
+                            </Text>
+                        }
+                    </TouchableOpacity>
+                </View>
+            </KeyboardAwareScrollView>
+        </TouchableWithoutFeedback>
     )
 }
 
