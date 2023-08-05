@@ -98,8 +98,7 @@ const ChatScreen = () => {
         initConversation();
     }, []);
 
-    const handleSendMessage = async (e) => {
-        e.preventDefault();
+    const handleSendMessage = async () => {
         if (message !== '' && conversationId) {
             await addDoc(collection(db, `conversations/${conversationId}/messages`), {
                 text: message,
