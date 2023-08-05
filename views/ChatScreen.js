@@ -7,9 +7,9 @@ import { collection, onSnapshot, addDoc, serverTimestamp, orderBy, query, where,
 import { auth, db } from '../firebaseConfig';
 
 const Message = memo(({ item, index }) => (
-    <View key={index} style={{ marginBottom: 10, alignSelf: item.user === auth.currentUser.uid ? 'flex-start' : 'flex-end', backgroundColor: item.user === auth.currentUser.uid ? 'white' : colors.vrip, padding: 10, borderRadius: 15, shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 } }}>
+    <View key={index} style={{ marginBottom: 10, alignSelf: item.user !== auth.currentUser.uid ? 'flex-start' : 'flex-end', backgroundColor: item.user !== auth.currentUser.uid ? 'white' : colors.vrip, padding: 10, borderRadius: 15, shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 } }}>
         <Text
-            style={{ color: item.user === auth.currentUser.uid ? 'black' : 'white', fontSize: 16 }}
+            style={{ color: item.user !== auth.currentUser.uid ? 'black' : 'white', fontSize: 16 }}
         >
             {item.text}
         </Text>
@@ -122,6 +122,7 @@ const ChatScreen = () => {
     return (
         <KeyboardAwareScrollView
             contentContainerStyle={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 10 }}
+            extraScrollHeight={-70}
         >
             <View style={{ paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 }}>
                 <ScrollView
@@ -133,7 +134,7 @@ const ChatScreen = () => {
             </View>
 
             <View
-                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', padding: 10, height: 40, marginLeft: 8, marginRight: 8, marginBottom: 8, borderRadius: 5, shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 } }}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', padding: 10, height: 40, marginLeft: 8, marginRight: 8, borderRadius: 5, shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 } }}
             >
                 <TextInput
                     placeholder="Escribe un mensaje"
