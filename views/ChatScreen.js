@@ -4,7 +4,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { getBottomSpace } from 'react-native-iphone-x-helper';
 import colors from '../helpers/colors';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { collection, onSnapshot, addDoc, serverTimestamp, orderBy, query, where, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, serverTimestamp, orderBy, query, where, getDocs, doc, setDoc } from "firebase/firestore";
 import { auth, db } from '../firebaseConfig';
 
 const Message = memo(({ item, index }) => (
@@ -130,7 +130,7 @@ const ChatScreen = () => {
                     ref={scrollViewRef}
                     onScroll={() => Keyboard.dismiss()}
                 >
-                    {messages.map((item, index) => <Message item={item} index={index} />)}
+                    {messages.map((item, index) => <Message key={index} item={item} index={index} />)}
                 </ScrollView>
             </View>
 
