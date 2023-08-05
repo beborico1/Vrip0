@@ -106,6 +106,9 @@ const translations = {
       loadingNotifications: 'Loading notifications...',
       username: 'Username',
       emptyFields: 'Fields cannot be empty',
+      chatScreen: 'Chat',
+      conversations: 'Conversations',
+      noConversationsYet: 'No conversations yet',
       terms: `
 Last update: April 22, 2023.
 
@@ -257,6 +260,9 @@ If you have any questions about these Terms, please contact us at vripfashion@gm
       loadingNotifications: 'Cargando notificaciones...',
       username: 'Nombre de Usuario',
       emptyFields: 'Los campos no pueden estar vacíos',
+      chatScreen: 'Chat',
+      conversations: 'Conversaciones',
+      noConversationsYet: 'Aún no hay conversaciones',
       terms: `
 Última actualización: 22 de abril de 2023.
 

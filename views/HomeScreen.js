@@ -11,9 +11,6 @@ import { LogBox } from 'react-native';
 import colors from '../helpers/colors';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, doc, setDoc, serverTimestamp, collectionGroup, query, where } from "firebase/firestore";
-import { db } from '../firebaseConfig';
 
 LogBox.ignoreAllLogs();
 
