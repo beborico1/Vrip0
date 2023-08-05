@@ -116,6 +116,10 @@ const ChatScreen = () => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
     }, []);
 
+    useEffect(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+    }, [messages]);    
+
     return (
         <KeyboardAwareScrollView
             contentContainerStyle={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 10 }}
