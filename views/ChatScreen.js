@@ -1,16 +1,15 @@
 import { View, TextInput, TouchableOpacity, Text, ScrollView, Keyboard } from 'react-native';
 import React, { useEffect, useState, useCallback, memo } from 'react';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { getBottomSpace } from 'react-native-iphone-x-helper';
 import colors from '../helpers/colors';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { collection, onSnapshot, addDoc, serverTimestamp, orderBy, query, where, getDocs, doc, setDoc } from "firebase/firestore";
 import { auth, db } from '../firebaseConfig';
 
 const Message = memo(({ item, index }) => (
-    <View key={index} style={{ marginBottom: 10, alignSelf: item.user === 1 ? 'flex-start' : 'flex-end', backgroundColor: item.user === 1 ? 'white' : colors.vrip, padding: 10, borderRadius: 15, shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 } }}>
+    <View key={index} style={{ marginBottom: 10, alignSelf: item.user === auth.currentUser.uid ? 'flex-start' : 'flex-end', backgroundColor: item.user === auth.currentUser.uid ? 'white' : colors.vrip, padding: 10, borderRadius: 15, shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 } }}>
         <Text
-            style={{ color: item.user === 1 ? 'black' : 'white', fontSize: 16 }}
+            style={{ color: item.user === auth.currentUser.uid ? 'black' : 'white', fontSize: 16 }}
         >
             {item.text}
         </Text>
@@ -123,7 +122,6 @@ const ChatScreen = () => {
     return (
         <KeyboardAwareScrollView
             contentContainerStyle={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 10 }}
-            extraScrollHeight={Platform.OS === 'ios' ? getBottomSpace() * (-2) : 0}
         >
             <View style={{ paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 }}>
                 <ScrollView
