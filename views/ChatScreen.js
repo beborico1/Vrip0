@@ -122,12 +122,12 @@ const ChatScreen = () => {
     return (
         <KeyboardAwareScrollView
             contentContainerStyle={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 10 }}
-            extraScrollHeight={-70}
+            extraScrollHeight={-50}
         >
             <View style={{ paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 }}>
                 <ScrollView
                     ref={scrollViewRef}
-                    onScroll={() => Keyboard.dismiss()}
+                    onScrollBeginDrag={Keyboard.dismiss}
                 >
                     {messages.map((item, index) => <Message key={index} item={item} index={index} />)}
                 </ScrollView>
@@ -141,9 +141,14 @@ const ChatScreen = () => {
                     style={{ height: 40, flex: 1, marginLeft: 8 }}
                     value={message}
                     onChangeText={handleChange}
+                    onSubmitEditing={handleSendMessage}
                 />
                 <TouchableOpacity
                     onPress={handleSendMessage}
+                    style={{
+                        width: 60,
+                        height: 40,
+                    }}
                 >
                     {message !== '' &&
                         <Text
