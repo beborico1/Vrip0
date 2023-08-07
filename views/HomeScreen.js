@@ -94,7 +94,7 @@ const HomeScreen = () => {
                     }}
                     >
                       <View key={index} style={{ padding: 10, marginBottom: 5, backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', alignItems: 'center', shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 }, width: windowWidth * 0.9, marginHorizontal: 3 }}>
-                        <Image source={result.profile_picture ? { uri: result.profile_picture } : require('../assets/default-profile-picture.png')} style={{ width: 50, height: 50, borderRadius: 25 }} />
+                        <Image source={result.profile_picture ? { uri: result.profile_picture } : require('../assets/default-profile-picture.png')} style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: 'lightgray' }} />
                         <Text
                           style={{ marginLeft: 10, fontSize: 16, fontWeight: '500' }}
                         >

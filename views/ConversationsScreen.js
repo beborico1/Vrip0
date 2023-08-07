@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LanguageContext } from '../helpers/LanguageContext';
 import colors from '../helpers/colors';
 import { auth, db } from '../firebaseConfig';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 
 const ConversationsScreen = () => {
     const { results, search, loadingAlgolia, errorAlgolia } = useAlgoliaSearch();
@@ -31,19 +31,37 @@ const ConversationsScreen = () => {
     useEffect(() => {
         const q = query(collection(db, "conversations"), where("users", "array-contains", userId));
 
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+            const otherUsersIds = [];
             const conversations = [];
-            querySnapshot.forEach((doc) => {
-                if (!doc.data().messageCount) return;
-                // Asegúrate de que la estructura del objeto coincida con cómo esperas usarla
-                const data = doc.data();
-                data.id = doc.id;  // añade el ID del documento si es necesario
-                conversations.push(data);
+
+            querySnapshot.docs.forEach(conversationDoc => {
+                const data = conversationDoc.data();
+                if (!data.messageCount) return; // Ignora las conversaciones sin messageCount
+
+                const otherUser = data.users.filter(user => user !== userId)[0];
+                otherUsersIds.push(otherUser);
+                conversations.push({ ...data, id: conversationDoc.id });
             });
+
+            console.log(otherUsersIds);
+            const otherUsersQuery = query(collection(db, "users"), where("id", "in", otherUsersIds));
+            const otherUsersDocs = await getDocs(otherUsersQuery);
+
+            const otherUsersData = {};
+            otherUsersDocs.forEach((otherUserDoc) => {
+                otherUsersData[otherUserDoc.id] = otherUserDoc.data();
+                console.log(otherUserDoc.data());
+            });
+
+            conversations.forEach((conversation) => {
+                const otherUser = conversation.users.filter(user => user !== userId)[0];
+                conversation.otherUser = otherUsersData[otherUser];
+            });
+
             setConversations(conversations);
         });
 
-        // Asegúrate de cancelar la suscripción cuando el componente se desmonte
         return () => unsubscribe();
     }, []);
 
@@ -81,7 +99,7 @@ const ConversationsScreen = () => {
                                     }}
                                     >
                                         <View key={index} style={{ padding: 10, marginBottom: 5, backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', alignItems: 'center', shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 }, width: windowWidth * 0.9, marginHorizontal: 3 }}>
-                                            <Image source={result.profile_picture ? { uri: result.profile_picture } : require('../assets/default-profile-picture.png')} style={{ width: 50, height: 50, borderRadius: 25 }} />
+                                            <Image source={result.profile_picture ? { uri: result.profile_picture } : require('../assets/default-profile-picture.png')} style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: 'lightgray' }} />
                                             <Text
                                                 style={{ marginLeft: 10, fontSize: 16, fontWeight: '500' }}
                                             >
@@ -94,26 +112,45 @@ const ConversationsScreen = () => {
                     }
                 </View>
                 :
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ flex: 1, justifyContent: 'start', alignItems: 'center' }}>
+
                     {conversations.length > 0 ?
-                        conversations.map((conversation, index) => (
-                            <TouchableOpacity key={index} onPress={() => navigation.navigate('ChatScreen', { result: conversation.users.filter(user => user !== userId)[0] })}>
-                                <View key={index} style={{ padding: 10, marginBottom: 5, backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', alignItems: 'center', shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 }, width: windowWidth * 0.9, marginHorizontal: 3 }}>
-                                    <Text
-                                        style={{ marginLeft: 10, fontSize: 16, fontWeight: '500' }}
-                                    >
-                                        {conversation.users.filter(user => user !== userId)[0]}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                        ))
+                        <ScrollView>
+                            {conversations.map((conversation, index) => (
+                                conversation.otherUser &&
+                                <TouchableOpacity key={index} onPress={() => navigation.navigate('ChatScreen', { result: conversation.otherUser })}>
+                                    <View key={index} style={{ padding: 10, marginBottom: 5, backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', alignItems: 'center', shadowOpacity: 0.2, shadowRadius: 1, shadowOffset: { width: 1, height: 1 }, width: windowWidth * 0.9, marginHorizontal: 3 }}>
+                                        <Image
+                                            source={conversation.otherUser.profile_picture ? { uri: conversation.otherUser.profile_picture } : require('../assets/default-profile-picture.png')}
+                                            style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: 'lightgray' }}
+                                        />
+                                        <View style={{ flexDirection: 'column', marginLeft: 10 }}>
+                                            <Text
+                                                style={{ marginLeft: 10, fontSize: 16, fontWeight: '500' }}
+                                            >
+                                                @{conversation.otherUser.username}
+                                            </Text>
+                                            <Text
+                                                style={{ marginLeft: 10, fontSize: 14, fontWeight: '400', color: 'gray', marginTop: 5 }}
+                                            >
+                                                {conversation.lastMessageText}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
 
                         :
-                        <Text
-                            style={{ fontSize: 20, fontWeight: '400', color: 'gray' }}
+                        <View
+                            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
                         >
-                            {texts.noConversationsYet}
-                        </Text>
+                            <Text
+                                style={{ fontSize: 20, fontWeight: '400', color: 'gray' }}
+                            >
+                                {texts.noConversationsYet}
+                            </Text>
+                        </View>
                     }
                 </View>
             }

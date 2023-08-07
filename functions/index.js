@@ -233,3 +233,81 @@ exports.onOutfitCreated = functions.firestore
         throw error;
       }
     });
+
+exports.incrementMessageCount = functions.firestore
+    .document("conversations/{conversationId}/messages/{messageId}")
+    .onCreate(async (snapshot, context) => {
+      // Obtener el ID de la conversación desde los parámetros
+      const conversationId = context.params.conversationId;
+
+      // Obtener el contenido del mensaje desde el snapshot
+      const messageData = snapshot.data();
+      const lastMessageText = messageData.text;
+      const lastMessageSender = messageData.user;
+
+      // Obtener una referencia al documento de la conversación
+      const conversationRef = admin.firestore()
+          .collection("conversations").doc(conversationId);
+
+      // Actualizar el documento de la conversación
+      // con los campos lastMessageText y lastMessageSender
+      return conversationRef.update({
+        messageCount: admin.firestore.FieldValue.increment(1),
+        lastMessageText: lastMessageText,
+        lastMessageSender: lastMessageSender,
+      });
+    });
+
+
+exports.sendNotificationOnMessage = functions.firestore
+    .document("conversations/{conversationId}/messages/{messageId}")
+    .onCreate(async (snapshot, context) => {
+      const messageData = snapshot.data();
+      const senderUserId = messageData.user; // El usuario que creó el mensaje
+      const messageText = messageData.text; // El texto del mensaje
+      const conversationId = context.params.conversationId;
+
+      // Obtener el documento de usuario para el senderUserId
+      const senderUserRef = admin.firestore()
+          .collection("users").doc(senderUserId);
+      const senderUserSnapshot = await senderUserRef.get();
+      const senderUserData = senderUserSnapshot.data();
+      const senderUsername = senderUserData.username;
+
+      // Obtener el documento de la conversación para acceder al arreglo 'users'
+      const conversationRef = admin.firestore()
+          .collection("conversations").doc(conversationId);
+      const conversationSnapshot = await conversationRef.get();
+      const conversationData = conversationSnapshot.data();
+      const usersArray = conversationData.users;
+      // Filtrar el usuario que creó el mensaje
+      const recipientUserIds = usersArray
+          .filter((userId) => userId !== senderUserId);
+
+      // Iterar sobre los usuarios restantes y enviar la notificación
+      const promises = recipientUserIds.map(async (userId) => {
+        const userRef = admin.firestore().collection("users").doc(userId);
+        const userSnapshot = await userRef.get();
+        const userData = userSnapshot.data();
+        const expoPushToken = userData.expoPushToken;
+
+        const message = {
+          to: expoPushToken,
+          sound: "default",
+          title: `@${senderUsername} te ha enviado un mensaje 💭`,
+          body: messageText,
+          data: {data: "goes here"},
+        };
+
+        return axios.post("https://exp.host/--/api/v2/push/send", message)
+            .then((response) => {
+              console.log("Notificación enviada exitosamente:", response.data);
+            })
+            .catch((error) => {
+              console.log("Error enviando la notificación:", error);
+            });
+      });
+
+      // Esperar a que todas las promesas se resuelvan
+      return Promise.all(promises);
+    });
